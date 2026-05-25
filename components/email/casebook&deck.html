@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Transaction Receipt - 180DC UB</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
+    <div style="max-width: 600px; background-color: #ffffff; margin: 0 auto; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #003366; margin: 0;">180 Degrees Consulting UB</h2>
+            <p style="color: #666666; margin-top: 5px;">Transaction Receipt</p>
+        </div>
+        
+        <p style="color: #333333; font-size: 16px;">Hi <strong>{{buyer_name}}</strong>,</p>
+        <p style="color: #333333; font-size: 16px;">Thank you for purchasing <strong>{{item_name}}</strong>. Your payment has been successfully processed.</p>
+        
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px; margin-bottom: 20px;">
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #dddddd; color: #555555;"><strong>Product Name</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dddddd; color: #333333; text-align: right;">{{item_name}}</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #dddddd; color: #555555;"><strong>Price</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #dddddd; color: #333333; text-align: right;">Rp {{price}}</td>
+            </tr>
+        </table>
+        
+        <div style="background-color: #eef5fa; padding: 15px; border-left: 4px solid #0055a5; margin-bottom: 20px;">
+            <p style="margin: 0; color: #003366; font-size: 14px;">
+                <strong>Note:</strong> Kindly wait 1x12 hours for Admin Confirming and Share the access with you.
+            </p>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="{{file_url}}" style="background-color: #003366; color: #ffffff; text-decoration: none; padding: 12px 25px; border-radius: 5px; font-weight: bold; display: inline-block;">Access Your File</a>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #eeeeee; margin: 30px 0;">
+        <p style="color: #999999; font-size: 12px; text-align: center;">
+            &copy; 2026 180 Degrees Consulting - Universitas Brawijaya.<br>
+            If you have any questions, please contact Mela at +62 811-3787-689.
+        </p>
+    </div>
+</body>
+</html>

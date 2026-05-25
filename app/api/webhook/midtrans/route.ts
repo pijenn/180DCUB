@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
+import emailjs from "@emailjs/nodejs";
 
 // For webhook, we must use the service role key to bypass RLS,
 // since this request comes from Midtrans server, not an authenticated user.
@@ -60,7 +61,7 @@ export async function POST(req: Request) {
     // Let's get the current status first to prevent double-processing
     const { data: currentTx, error: fetchError } = await supabase
       .from("transactions")
-      .select("status, voucher_id")
+      .select("status, voucher_id, user_id, total_amount")
       .eq("id", transactionId)
       .single();
 
@@ -92,6 +93,91 @@ export async function POST(req: Request) {
             .from("voucher_code")
             .update({ kuota: voucher.kuota - 1 })
             .eq("id", currentTx.voucher_id);
+        }
+      }
+
+      // Send Emails if SUCCESS
+      if (internalStatus === "SUCCESS") {
+        try {
+          // 1. Fetch User Info
+          const { data: userData } = await supabase
+            .from("users")
+            .select("full_name, email")
+            .eq("id", currentTx.user_id)
+            .single();
+
+          // 2. Fetch Transaction Items with Product Info
+          const { data: itemsData } = await supabase
+            .from("transaction_items")
+            .select(`
+              price_at_buy,
+              products!inner(name, type, file_url),
+              mentoring_schedules(mentor_name, date, time)
+            `)
+            .eq("transaction_id", transactionId);
+
+          if (userData && itemsData) {
+            let itemNames = [];
+
+            // Send email to buyer for each item
+            for (const item of itemsData) {
+              const productName = item.products.name;
+              itemNames.push(productName);
+              const priceStr = item.price_at_buy.toLocaleString("id-ID");
+              const fileUrl = item.products.file_url || "#";
+
+              const mentorName = item.products.type === "MENTORING" 
+                ? (item.mentoring_schedules?.mentor_name || "Assigned Mentor") 
+                : "";
+              const scheduleTime = item.products.type === "MENTORING" && item.mentoring_schedules
+                ? `${item.mentoring_schedules.date} at ${item.mentoring_schedules.time}`
+                : "";
+
+              const templateParams = {
+                to_email: userData.email,
+                to_name: userData.full_name,
+                item_name: productName,
+                price: priceStr,
+                file_url: fileUrl,
+                mentor_name: mentorName,
+                schedule_time: scheduleTime,
+              };
+
+              // Send to Buyer using only Product Template ID
+              await emailjs.send(
+                process.env.EMAILJS_SERVICE_ID!,
+                process.env.EMAILJS_TEMPLATE_ID_PRODUCT!,
+                templateParams,
+                {
+                  publicKey: process.env.EMAILJS_PUBLIC_KEY!,
+                  privateKey: process.env.EMAILJS_PRIVATE_KEY!,
+                }
+              );
+            }
+
+            // Send Admin Notification
+            const adminParams = {
+              to_email: "sngub@180dc.org",
+              buyer_name: userData.full_name,
+              buyer_email: userData.email,
+              items: itemNames.join(", "),
+              total_amount: currentTx.total_amount.toLocaleString("id-ID"),
+              transaction_id: order_id
+            };
+
+            await emailjs.send(
+              process.env.EMAILJS_SERVICE_ID!,
+              process.env.EMAILJS_TEMPLATE_ID_ADMIN!,
+              adminParams,
+              {
+                publicKey: process.env.EMAILJS_PUBLIC_KEY!,
+                privateKey: process.env.EMAILJS_PRIVATE_KEY!,
+              }
+            );
+          }
+        } catch (emailError) {
+          console.error("Failed to send emails:", emailError);
+          // We don't throw here so we can still return 200 OK to Midtrans
         }
       }
     }

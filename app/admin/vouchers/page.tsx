@@ -159,7 +159,7 @@ export default function VouchersAdmin() {
                       </td>
                       <td className="px-6 py-4">{voucher.applicable_type}</td>
                       <td className="px-6 py-4">
-                        0 / {voucher.kuota}
+                       {voucher.kuota}
                       </td>
                       <td className="px-6 py-4 text-right space-x-3">
                         <button
