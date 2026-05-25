@@ -112,7 +112,7 @@ export async function POST(req: Request) {
             .select(`
               price_at_buy,
               products!inner(name, type, file_url),
-              mentoring_schedules(mentor_name, date, time)
+              mentoring_schedules(start_time)
             `)
             .eq("transaction_id", transactionId);
 
@@ -131,11 +131,20 @@ export async function POST(req: Request) {
               const fileUrl = product?.file_url || "#";
 
               const mentorName = product?.type === "MENTORING" 
-                ? (schedule?.mentor_name || "Assigned Mentor") 
+                ? "Assigned Mentor" 
                 : "";
-              const scheduleTime = product?.type === "MENTORING" && schedule
-                ? `${schedule.date} at ${schedule.time}`
-                : "";
+              
+              let scheduleTime = "";
+              if (product?.type === "MENTORING" && schedule?.start_time) {
+                const dateObj = new Date(schedule.start_time);
+                scheduleTime = dateObj.toLocaleString("id-ID", {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                });
+              }
 
               const templateParams = {
                 to_email: userData.email,
