@@ -57,14 +57,43 @@ export async function POST(req: Request) {
     // Order ID format we sent was `ORDER-{uuid}`
     const transactionId = order_id.replace("ORDER-", "");
 
-    const { error } = await supabase
+    // Let's get the current status first to prevent double-processing
+    const { data: currentTx, error: fetchError } = await supabase
       .from("transactions")
-      .update({ status: internalStatus })
-      .eq("id", transactionId);
+      .select("status, voucher_id")
+      .eq("id", transactionId)
+      .single();
 
-    if (error) {
-      console.error("Failed to update transaction status:", error);
-      throw new Error(error.message);
+    if (fetchError || !currentTx) {
+      throw new Error("Transaction not found");
+    }
+
+    if (currentTx.status !== internalStatus) {
+      const { error } = await supabase
+        .from("transactions")
+        .update({ status: internalStatus })
+        .eq("id", transactionId);
+
+      if (error) {
+        console.error("Failed to update transaction status:", error);
+        throw new Error(error.message);
+      }
+
+      // Decrease voucher quota if success
+      if (internalStatus === "SUCCESS" && currentTx.voucher_id) {
+        const { data: voucher } = await supabase
+          .from("voucher_code")
+          .select("kuota")
+          .eq("id", currentTx.voucher_id)
+          .single();
+
+        if (voucher && voucher.kuota > 0) {
+          await supabase
+            .from("voucher_code")
+            .update({ kuota: voucher.kuota - 1 })
+            .eq("id", currentTx.voucher_id);
+        }
+      }
     }
 
     console.log(`Transaction ${transactionId} updated to ${internalStatus}`);

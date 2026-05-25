@@ -15,7 +15,6 @@ export default async function AdminDashboard() {
   const { data: items } = await supabase
     .from("transaction_items")
     .select(`
-      quantity,
       products!inner(type),
       transactions!inner(status)
     `)
@@ -31,7 +30,7 @@ export default async function AdminDashboard() {
     items.forEach((item: any) => {
       const type = item.products.type as keyof typeof salesByType;
       if (salesByType[type] !== undefined) {
-        salesByType[type] += Number(item.quantity);
+        salesByType[type] += 1;
       }
     });
   }
