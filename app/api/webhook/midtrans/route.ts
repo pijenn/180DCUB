@@ -120,17 +120,21 @@ export async function POST(req: Request) {
             let itemNames = [];
 
             // Send email to buyer for each item
-            for (const item of itemsData) {
-              const productName = item.products.name;
-              itemNames.push(productName);
-              const priceStr = item.price_at_buy.toLocaleString("id-ID");
-              const fileUrl = item.products.file_url || "#";
+            for (const rawItem of itemsData) {
+              const item = rawItem as any;
+              const product = Array.isArray(item.products) ? item.products[0] : item.products;
+              const schedule = Array.isArray(item.mentoring_schedules) ? item.mentoring_schedules[0] : item.mentoring_schedules;
 
-              const mentorName = item.products.type === "MENTORING" 
-                ? (item.mentoring_schedules?.mentor_name || "Assigned Mentor") 
+              const productName = product?.name || "Product";
+              itemNames.push(productName);
+              const priceStr = item.price_at_buy?.toLocaleString("id-ID") || "0";
+              const fileUrl = product?.file_url || "#";
+
+              const mentorName = product?.type === "MENTORING" 
+                ? (schedule?.mentor_name || "Assigned Mentor") 
                 : "";
-              const scheduleTime = item.products.type === "MENTORING" && item.mentoring_schedules
-                ? `${item.mentoring_schedules.date} at ${item.mentoring_schedules.time}`
+              const scheduleTime = product?.type === "MENTORING" && schedule
+                ? `${schedule.date} at ${schedule.time}`
                 : "";
 
               const templateParams = {
