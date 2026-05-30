@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Package, Ticket, CalendarClock, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, Ticket, CalendarClock, LogOut, Receipt } from "lucide-react";
 
 export default async function AdminLayout({
   children,
@@ -34,6 +34,7 @@ export default async function AdminLayout({
   const navItems = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "Products", href: "/admin/products", icon: Package },
+    { name: "Transactions", href: "/admin/transactions", icon: Receipt },
     { name: "Vouchers", href: "/admin/vouchers", icon: Ticket },
     { name: "Mentoring", href: "/admin/mentoring", icon: CalendarClock },
   ];
