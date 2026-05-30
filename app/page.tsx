@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, BarChart3, Users, Globe2, Briefcase } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { GlassCard } from "@/components/ui/GlassCard";
 import Image from "next/image";
 
 // Framer Motion Variants
-const staggerContainer = {
+const staggerContainer: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -16,7 +16,7 @@ const staggerContainer = {
   }
 };
 
-const fadeInUp = {
+const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 30 },
   show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
 };

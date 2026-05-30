@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { TeamMemberCard } from "@/components/team/TeamMemberCard";
@@ -10,7 +10,7 @@ const DUMMY_PHOTO = "https://res.cloudinary.com/ddlo3v9hx/image/upload/v17801375
 const DUMMY_NAME = "Rafie Ramadhan Al Aziz Zein";
 
 // Animation Variants
-const staggerContainer = {
+const staggerContainer: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -18,7 +18,7 @@ const staggerContainer = {
   }
 };
 
-const fadeInUp = {
+const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 30 },
   show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
 };
