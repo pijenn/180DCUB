@@ -15,8 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "180DC UB E-Commerce",
-  description: "Product Platform for 180DC UB",
+  title: "180DC UB",
+  description: "180 Degrees Consulting Universitas Brawijaya",
+  icons: {
+    icon: "/assets/Green.png",
+  },
 };
 
 export default function RootLayout({

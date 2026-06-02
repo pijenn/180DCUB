@@ -1,10 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Product } from "@/lib/mockData";
 import { ArrowRight, FileText, MonitorPlay, Users } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product;
@@ -22,11 +20,11 @@ export default function ProductCard({ product }: ProductCardProps) {
   const getIcon = () => {
     switch (product.type) {
       case "DECK":
-        return <MonitorPlay className="w-4 h-4" />;
+        return <MonitorPlay className="w-5 h-5" />;
       case "CASEBOOK":
-        return <FileText className="w-4 h-4" />;
+        return <FileText className="w-5 h-5" />;
       case "MENTORING":
-        return <Users className="w-4 h-4" />;
+        return <Users className="w-5 h-5" />;
     }
   };
 
@@ -42,55 +40,56 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <Link href={`/product/${product.id}`} className="group flex flex-col bg-card rounded-2xl overflow-hidden border border-border transition-all hover:shadow-xl hover:-translate-y-1 hover:border-primary/50">
+    <Link href={`/product/${product.id}`} className="group flex flex-col cursor-pointer">
       {/* Image Container */}
-      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+      <div className="relative aspect-[4/5] overflow-hidden border border-white/10 mb-8">
         {product.image_url ? (
           <img
             src={product.image_url}
             alt={product.name}
-            className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+            className="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105 opacity-80 group-hover:opacity-100 grayscale group-hover:grayscale-0"
           />
         ) : (
-          <div className="flex items-center justify-center w-full h-full text-muted-foreground">
+          <div className="flex items-center justify-center w-full h-full bg-white/5 text-white/20 group-hover:text-[var(--color-primary)] transition-colors duration-500">
             {getIcon()}
           </div>
         )}
         
+        {/* Overlay Hover State */}
+        <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-700" />
+
         {/* Category Badge */}
-        <div className="absolute top-4 left-4 flex gap-2">
-          <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full bg-background/90 backdrop-blur-sm text-foreground shadow-sm">
+        <div className="absolute top-6 left-6 flex gap-3">
+          <span className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold tracking-widest uppercase rounded-none bg-black/80 backdrop-blur-md text-white border border-white/10">
             {getIcon()}
             {getTypeLabel()}
-          </span>
-          <span className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary backdrop-blur-sm shadow-sm border border-primary/20">
-            {product.category}
           </span>
         </div>
       </div>
 
       {/* Content Container */}
-      <div className="flex flex-col flex-grow p-6">
-        <h3 className="text-xl font-bold tracking-tight mb-2 group-hover:text-primary transition-colors line-clamp-1">
+      <div className="flex flex-col flex-grow pr-8">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-sm tracking-[0.2em] uppercase font-bold text-[var(--color-primary)]">
+            {product.category}
+          </span>
+          <span className="text-xl font-light text-white">
+            {formatPrice(product.price)}
+          </span>
+        </div>
+        
+        <h3 className="text-3xl font-bold tracking-tighter mb-4 group-hover:text-[var(--color-primary)] transition-colors duration-300 line-clamp-2">
           {product.name}
         </h3>
         
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-4 flex-grow">
+        <p className="text-lg text-white/50 font-light line-clamp-2 mb-8">
           {product.description}
         </p>
         
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-4 border-t border-border mt-auto">
-          <div className="flex flex-col">
-            <span className="text-xs text-muted-foreground font-medium">Price</span>
-            <span className="text-lg font-bold text-foreground">
-              {formatPrice(product.price)}
-            </span>
-          </div>
-          
-          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-            <ArrowRight className="w-5 h-5 group-hover:-rotate-45 transition-transform" />
-          </div>
+        {/* Animated Arrow Footer */}
+        <div className="mt-auto flex items-center gap-4 text-white group-hover:text-[var(--color-primary)] transition-colors duration-300">
+          <span className="text-sm tracking-widest uppercase font-bold">Explore Product</span>
+          <ArrowRight className="w-6 h-6 -rotate-45 group-hover:rotate-0 transition-transform duration-500 ease-out" />
         </div>
       </div>
     </Link>
