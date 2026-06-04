@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ShoppingCart, User, Menu, X, LogOut } from "lucide-react";
@@ -74,12 +75,19 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-border">
+    <nav className="fixed top-0 w-full z-50 bg-black/40 backdrop-blur-xl border-b border-white/10 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           <div className="flex-shrink-0 flex items-center">
-            <Link href="/" className="text-2xl font-bold tracking-tighter text-primary">
-              180DC<span className="text-foreground">UB</span>
+            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <Image 
+                src="/assets/Logo%20180%20green-white.png" 
+                alt="180DC UB Logo" 
+                width={160} 
+                height={48} 
+                className="h-8 md:h-10 w-auto object-contain"
+                priority
+              />
             </Link>
           </div>
 
@@ -91,7 +99,7 @@ export default function Navbar() {
                   key={link.name}
                   href={link.href}
                   className={cn(
-                    "text-sm font-medium transition-colors hover:text-primary",
+                    "text-xs font-bold uppercase tracking-widest transition-all hover:text-primary hover:-translate-y-0.5",
                     pathname === link.href ? "text-primary" : "text-muted-foreground"
                   )}
                 >
@@ -126,7 +134,7 @@ export default function Navbar() {
                   </button>
                 </div>
               ) : (
-                <Link href="/login" className="text-sm font-medium text-primary hover:underline">
+                <Link href="/login" className="text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors">
                   Sign In
                 </Link>
               )}

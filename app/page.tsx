@@ -6,6 +6,7 @@ import { motion, Variants } from "framer-motion";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { SmoothScroll } from "@/components/ui/SmoothScroll";
 import { ImageReveal } from "@/components/ui/ImageReveal";
+import { TypewriterEffect } from "@/components/ui/Typewriter";
 
 // Framer Motion Variants
 const staggerContainer: Variants = {
@@ -49,11 +50,11 @@ export default function Home() {
               </span>
             </motion.div>
             
-            <motion.h1 variants={textReveal} className="text-7xl md:text-9xl lg:text-[11rem] font-black tracking-tighter leading-[0.85] text-white uppercase">
-              Strategic
+            <motion.h1 variants={textReveal} className="text-7xl md:text-9xl lg:text-[11rem] font-black tracking-tighter leading-[0.85] text-white uppercase min-h-[1.1em] flex items-center">
+              <TypewriterEffect text="Impact" delay={0.8} cursor={false} />
             </motion.h1>
-            <motion.h1 variants={textReveal} className="text-7xl md:text-9xl lg:text-[11rem] font-black tracking-tighter leading-[0.85] text-transparent bg-clip-text bg-[var(--color-primary)] uppercase">
-              Impact.
+            <motion.h1 variants={textReveal} className="text-7xl md:text-9xl lg:text-[11rem] font-black tracking-tighter leading-[0.85] text-[var(--color-primary)] uppercase min-h-[1.1em] flex items-center">
+              <TypewriterEffect text="Thrivers." delay={1.5} cursor={true} />
             </motion.h1>
             
             <motion.p variants={textReveal} className="text-2xl md:text-4xl text-white/50 font-light mt-12 max-w-4xl leading-snug">
