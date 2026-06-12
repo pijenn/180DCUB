@@ -10,7 +10,6 @@ import { SmoothScroll } from "@/components/ui/SmoothScroll";
 import { ImageReveal } from "@/components/ui/ImageReveal";
 import { TypewriterEffect } from "@/components/ui/Typewriter";
 import { RecentArticles } from "@/components/ui/RecentArticles";
-import { GlareCard } from "@/components/ui/GlareCard";
 
 function AnimatedCounter({ from = 0, to, suffix = "" }: { from?: number; to: number; suffix?: string }) {
   const nodeRef = useRef<HTMLSpanElement>(null);
@@ -63,8 +62,7 @@ export default function Home() {
           {/* Subtle blurred background element */}
           <div className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] bg-[var(--color-primary)]/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
-          <div className="absolute top-[-10%] md:top-[-75%] right-[-30%] md:right-[-35%] w-[800px] md:w-[1700px] h-[800px] md:h-[1700px] z-0 pointer-events-auto cursor-default">
-            <GlareCard className="w-full h-full rounded-full">
+          <div className="absolute top-[-10%] md:top-[-45%] right-[-30%] md:right-[-25%] w-[800px] md:w-[1200px] h-[800px] md:h-[1200px] z-0 pointer-events-none">
               <motion.div
                 initial={{ opacity: 0, scale: 1.1, filter: "blur(20px)" }}
                 animate={{ opacity: 0.25, scale: 1, filter: "blur(10px)" }}
@@ -79,7 +77,6 @@ export default function Home() {
                   priority
                 />
               </motion.div>
-            </GlareCard>
           </div>
 
           <motion.div
