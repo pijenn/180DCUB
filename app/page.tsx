@@ -62,7 +62,7 @@ export default function Home() {
           {/* Subtle blurred background element */}
           <div className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] bg-[var(--color-primary)]/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
-          <div className="absolute top-[-10%] md:top-[-45%] right-[-30%] md:right-[-25%] w-[800px] md:w-[800px] h-[800px] md:h-[800px] z-0 pointer-events-none">
+          <div className="absolute top-[-10%] md:top-[-45%] right-[-30%] md:right-[-25%] w-[800px] md:w-[800px] h-[900px] md:h-[900px] z-0 pointer-events-none">
               <motion.div
                 initial={{ opacity: 0, scale: 1.1, filter: "blur(20px)" }}
                 animate={{ opacity: 0.25, scale: 1, filter: "blur(10px)" }}
