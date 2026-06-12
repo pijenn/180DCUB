@@ -1,12 +1,38 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, ArrowUpRight, BarChart3, Users, Globe2, Briefcase } from "lucide-react";
-import { motion, Variants } from "framer-motion";
+import { motion, Variants, animate, useInView } from "framer-motion";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { SmoothScroll } from "@/components/ui/SmoothScroll";
 import { ImageReveal } from "@/components/ui/ImageReveal";
 import { TypewriterEffect } from "@/components/ui/Typewriter";
+import { RecentArticles } from "@/components/ui/RecentArticles";
+import { GlareCard } from "@/components/ui/GlareCard";
+
+function AnimatedCounter({ from = 0, to, suffix = "" }: { from?: number; to: number; suffix?: string }) {
+  const nodeRef = useRef<HTMLSpanElement>(null);
+  const isInView = useInView(nodeRef, { once: true, margin: "-100px" });
+
+  useEffect(() => {
+    if (isInView && nodeRef.current) {
+      const controls = animate(from, to, {
+        duration: 2,
+        ease: "easeOut",
+        onUpdate(value) {
+          if (nodeRef.current) {
+            nodeRef.current.textContent = Math.round(value).toString() + suffix;
+          }
+        },
+      });
+      return () => controls.stop();
+    }
+  }, [isInView, from, to, suffix]);
+
+  return <span ref={nodeRef}>{from}{suffix}</span>;
+}
 
 // Framer Motion Variants
 const staggerContainer: Variants = {
@@ -35,10 +61,29 @@ export default function Home() {
         {/* 1. Hero Section - Minimalist & Large Typography */}
         <section className="relative min-h-screen flex items-center justify-center px-6 pt-32 pb-20 overflow-hidden">
           {/* Subtle blurred background element */}
-          <div className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] bg-[var(--color-primary)]/10 rounded-full blur-[150px] -z-10 pointer-events-none" />
+          <div className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] bg-[var(--color-primary)]/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
+          
+          <div className="absolute top-[-10%] md:top-[-75%] right-[-30%] md:right-[-35%] w-[800px] md:w-[1700px] h-[800px] md:h-[1700px] z-0 pointer-events-auto cursor-default">
+            <GlareCard className="w-full h-full rounded-full">
+              <motion.div
+                initial={{ opacity: 0, scale: 1.1, filter: "blur(20px)" }}
+                animate={{ opacity: 0.25, scale: 1, filter: "blur(10px)" }}
+                transition={{ duration: 1.5, ease: "easeOut" }}
+                className="w-full h-full relative"
+              >
+                <Image 
+                  src="/assets/logo/Green.png" 
+                  alt="Background Logo" 
+                  fill 
+                  className="object-contain" 
+                  priority
+                />
+              </motion.div>
+            </GlareCard>
+          </div>
           
           <motion.div 
-            className="w-full max-w-7xl mx-auto flex flex-col gap-4"
+            className="w-full max-w-7xl mx-auto flex flex-col gap-4 relative z-10"
             variants={staggerContainer}
             initial="hidden"
             animate="show"
@@ -86,20 +131,40 @@ export default function Home() {
             >
               {/* Duplicate list for seamless loop */}
               {[...Array(2)].map((_, idx) => (
-                <div key={idx} className="flex gap-24 items-center opacity-30 grayscale hover:grayscale-0 transition-all duration-500">
-                  <div className="text-4xl font-bold uppercase tracking-widest">Deloitte</div>
-                  <div className="text-4xl font-bold uppercase tracking-widest">BCA</div>
-                  <div className="text-4xl font-bold uppercase tracking-widest">Unilever</div>
-                  <div className="text-4xl font-bold uppercase tracking-widest">Bank BRI</div>
-                  <div className="text-4xl font-bold uppercase tracking-widest">GOTO</div>
-                  <div className="text-4xl font-bold uppercase tracking-widest">PwC</div>
+                <div key={idx} className="flex gap-8 md:gap-12 items-center mx-4 md:mx-6">
+                  {[
+                    "bca.png", "bpcons.png", "ey.png", "gnv.png", 
+                    "grab.png", "idx.png", "markplus.png", "pwc.png", "unilever.png"
+                  ].map((logo, i) => (
+                    <div 
+                      key={i} 
+                      className="relative group flex items-center justify-center h-20 w-36 md:h-24 md:w-44 bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white hover:border-transparent rounded-2xl hover:scale-105 transition-all duration-500"
+                    >
+                      {/* Before Hover: White/Light Logo on Dark Glass */}
+                      <div className="absolute inset-0 p-4 md:p-6 flex items-center justify-center opacity-70 group-hover:opacity-0 transition-opacity duration-500">
+                        <img 
+                          src={`/assets/logo/${logo}`} 
+                          alt={logo.split('.')[0].toUpperCase()} 
+                          className="max-h-full max-w-full object-contain mix-blend-screen grayscale invert brightness-150" 
+                        />
+                      </div>
+                      
+                      {/* On Hover: Original Colored Logo */}
+                      <div className="absolute inset-0 p-4 md:p-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        <img 
+                          src={`/assets/logo/${logo}`} 
+                          alt={logo.split('.')[0].toUpperCase()} 
+                          className="max-h-full max-w-full object-contain mix-blend-multiply" 
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ))}
             </motion.ul>
           </div>
         </section>
 
-        {/* 3. Our Impact - Large Numbers Grid */}
         <section className="py-32 px-6">
           <div className="max-w-7xl mx-auto">
             <div className="mb-20">
@@ -112,19 +177,20 @@ export default function Home() {
               initial="hidden"
               whileInView="show"
               viewport={{ once: true, margin: "-100px" }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-6 border-t border-white/10 pt-16"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 md:gap-10 border-t border-white/10 pt-16"
             >
               {[
-                { icon: Briefcase, stat: "50+", label: "Projects Completed" },
-                { icon: Users, stat: "120+", label: "Student Consultants" },
-                { icon: Globe2, stat: "30+", label: "Non-Profit Partners" },
-                { icon: BarChart3, stat: "10k+", label: "Hours Volunteered" },
+                { icon: Briefcase, to: 20, suffix: "+", label: "Client Projects Completed" },
+                { icon: Users, to: 750, suffix: "+", label: "Peoples Impacted" },
+                { icon: Globe2, to: 30, suffix: "+", label: "Partnerships" },
               ].map((item, i) => (
                 <motion.div key={i} variants={fadeInUp} className="flex flex-col group">
                   <div className="text-[var(--color-primary)] mb-8 opacity-50 group-hover:opacity-100 group-hover:-translate-y-2 transition-all duration-300">
                     <item.icon className="w-12 h-12 stroke-[1.5]" />
                   </div>
-                  <h3 className="text-6xl lg:text-8xl font-black text-white mb-4 tracking-tighter">{item.stat}</h3>
+                  <h3 className="text-6xl lg:text-8xl font-black text-white mb-4 tracking-tighter">
+                    <AnimatedCounter to={item.to} suffix={item.suffix} />
+                  </h3>
                   <p className="text-xl text-white/50 font-light">{item.label}</p>
                 </motion.div>
               ))}
@@ -145,20 +211,7 @@ export default function Home() {
               </Link>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <ImageReveal src="/assets/180dc1.jpeg" alt="Knowledge 1" className="col-span-1 lg:col-span-2">
-                <div className="bg-black/40 backdrop-blur-md p-8 border-l-4 border-[var(--color-primary)]">
-                  <span className="text-[var(--color-primary)] font-bold tracking-widest text-sm mb-4 block">CASE STUDY</span>
-                  <h3 className="text-3xl md:text-5xl font-bold leading-tight">Optimizing Non-Profit Operations for Scale.</h3>
-                </div>
-              </ImageReveal>
-              <ImageReveal src="/assets/180dc2.jpeg" alt="Knowledge 2">
-                <div className="bg-black/40 backdrop-blur-md p-8 border-l-4 border-[var(--color-primary)]">
-                  <span className="text-[var(--color-primary)] font-bold tracking-widest text-sm mb-4 block">ANALYSIS</span>
-                  <h3 className="text-2xl md:text-3xl font-bold leading-tight">The Future of Sustainable Growth.</h3>
-                </div>
-              </ImageReveal>
-            </div>
+            <RecentArticles />
           </div>
         </section>
 
@@ -166,12 +219,12 @@ export default function Home() {
         <section className="py-32 px-6">
           <div className="max-w-7xl mx-auto">
             <div className="mb-20">
-              <span className="text-sm tracking-[0.3em] uppercase font-bold text-[var(--color-primary)]">Academy</span>
+              <span className="text-sm tracking-[0.3em] uppercase font-bold text-[var(--color-primary)]">Product</span>
               <h2 className="text-5xl md:text-7xl font-bold mt-4">Learn with Us.</h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-              <ImageReveal src="/assets/180dc3.jpeg" alt="Academy" className="h-[600px] hidden md:block" />
+              <ImageReveal src="/assets/180dc4.jpg" alt="Product" className="h-[600px] hidden md:block" />
               
               <div className="flex flex-col gap-12">
                 {['Casebook', 'Mentoring', 'Deck Templates'].map((product, i) => (
@@ -201,7 +254,9 @@ export default function Home() {
               Ready to <br /> transform?
             </h2>
             <Link 
-              href="/contact" 
+              href="https://wa.me/6289506570134" 
+              target="_blank"
+              rel="noopener noreferrer"
               className="group flex items-center gap-6 bg-black text-white px-12 py-6 rounded-full text-2xl font-bold hover:scale-105 transition-all duration-500 ease-out"
             >
               Let's Talk
