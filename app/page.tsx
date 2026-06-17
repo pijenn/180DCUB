@@ -56,8 +56,6 @@ export default function Home() {
   return (
     <SmoothScroll>
       <div className="flex flex-col w-full bg-background selection:bg-[var(--color-primary)] selection:text-black">
-
-        {/* 1. Hero Section - Minimalist & Large Typography */}
         <section className="relative min-h-screen flex items-center justify-center px-6 pt-32 pb-20 overflow-hidden">
           {/* Subtle blurred background element */}
           <div className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] bg-[var(--color-primary)]/10 rounded-full blur-[100px] -z-10 pointer-events-none" />

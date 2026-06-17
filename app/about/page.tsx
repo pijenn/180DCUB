@@ -4,6 +4,7 @@ import { motion, Variants } from "framer-motion";
 import { TeamMemberCard } from "@/components/team/TeamMemberCard";
 import { SmoothScroll } from "@/components/ui/SmoothScroll";
 import { Target, Lightbulb, Users, Handshake } from "lucide-react";
+import Image from "next/image";
 
 const DUMMY_PHOTO = "https://res.cloudinary.com/ddlo3v9hx/image/upload/v1780137577/UNLK0174_1_uezzbd.jpg";
 const DUMMY_NAME = "Rafie Ramadhan";
@@ -78,7 +79,7 @@ export default function AboutPage() {
                 </div>
                 <h2 className="text-5xl font-bold mb-6">Our Vision.</h2>
                 <p className="text-white/50 text-xl font-light leading-relaxed">
-                  To ensure that non-profits and social enterprises are able to maximize their social impact by overcoming the challenges they face, while simultaneously developing the next generation of social impact leaders.
+                  To position 180DC UB by 2026 as the top-choice consulting organization for Brawijaya students to grow and create meaningful impact, delivering innovative solutions for non-profits and social ventures across Indonesia.
                 </p>
               </motion.div>
               
@@ -88,7 +89,13 @@ export default function AboutPage() {
                 </div>
                 <h2 className="text-5xl font-bold mb-6">Our Mission.</h2>
                 <p className="text-white/50 text-xl font-light leading-relaxed">
-                  We empower organizations by providing them with innovative, practical, and sustainable solutions. We achieve this by connecting them with highly talented and driven university students.
+                  - Strengthen 180DC UB’s branding and position as Brawijaya’s top consulting organization
+                  <br />
+                  - Deliver innovative & data-driven consulting solutions that empower change and   create sustainable value
+                  <br />
+                  - Develop high quality sustain program built on precision, creativity, and continuous improvement 
+                  <br />
+                  - Create a healthy & fun work environment full of support and meet the needs of members
                 </p>
               </motion.div>
             </motion.div>
@@ -96,8 +103,10 @@ export default function AboutPage() {
         </section>
 
         {/* 3 & 4. Our Clients & Partners - Clean Borderless */}
-        <section className="py-32 px-6 bg-white/[0.02]">
-          <div className="max-w-7xl mx-auto space-y-32">
+        <section className="relative py-32 px-6 bg-white/[0.02] overflow-hidden">
+          {/* Background Logo */}
+      
+          <div className="relative z-10 max-w-7xl mx-auto space-y-32">
             
             {/* Clients */}
             <motion.div 
@@ -110,11 +119,17 @@ export default function AboutPage() {
                 <span className="text-sm tracking-[0.3em] uppercase font-bold text-[var(--color-primary)]">Impact Scaled</span>
                 <h2 className="text-5xl md:text-6xl font-bold mt-4">Our Clients.</h2>
               </motion.div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-16">
-                {[1, 2, 3, 4].map((i) => (
-                  <motion.div key={i} variants={fadeInUp} className="flex flex-col items-center justify-center opacity-30 hover:opacity-100 hover:text-[var(--color-primary)] transition-all duration-500 cursor-pointer">
-                    <Handshake className="w-16 h-16 stroke-[1]" />
-                    <span className="mt-4 text-sm tracking-widest uppercase">Client {i}</span>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16 items-center">
+                {[
+                  { name: "Clips.id", src: "/assets/client/clipsid.jpeg" },
+                  { name: "Gradient", src: "/assets/client/gradient.png" },
+                  { name: "PT IoT", src: "/assets/client/iot.png" },
+                  { name: "Moorlife", src: "/assets/client/moorlife.png" }
+                ].map((client, i) => (
+                  <motion.div key={i} variants={fadeInUp} className="relative w-full h-24 md:h-32 bg-white/12 border border-white/10 hover:bg-white rounded-2xl md:rounded-3xl p-6 md:p-8 flex items-center justify-center hover:scale-105 transition-all duration-500 cursor-pointer group">
+                    <div className="relative w-full h-full opacity-60 group-hover:opacity-100 grayscale group-hover:grayscale-0 transition-all duration-500">
+                      <Image src={client.src} alt={client.name} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-contain" />
+                    </div>
                   </motion.div>
                 ))}
               </div>
@@ -131,11 +146,17 @@ export default function AboutPage() {
                 <span className="text-sm tracking-[0.3em] uppercase font-bold text-[var(--color-primary)]">Shared Vision</span>
                 <h2 className="text-5xl md:text-6xl font-bold mt-4">Our Partners.</h2>
               </motion.div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-16">
-                {[1, 2, 3, 4].map((i) => (
-                  <motion.div key={i} variants={fadeInUp} className="flex flex-col items-center justify-center opacity-30 hover:opacity-100 hover:text-[var(--color-primary)] transition-all duration-500 cursor-pointer">
-                    <Users className="w-16 h-16 stroke-[1]" />
-                    <span className="mt-4 text-sm tracking-widest uppercase">Partner {i}</span>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16 items-center">
+                {[
+                  { name: "BCA", src: "/assets/partner/bca.png" },
+                  { name: "Grab", src: "/assets/partner/grab.png" },
+                  { name: "Markplus", src: "/assets/partner/markplus.png" },
+                  { name: "Pertamina", src: "/assets/partner/pertamina.png" }
+                ].map((partner, i) => (
+                  <motion.div key={i} variants={fadeInUp} className="relative w-full h-24 md:h-32 bg-white/12 border border-white/10 hover:bg-white rounded-2xl md:rounded-3xl p-6 md:p-8 flex items-center justify-center hover:scale-105 transition-all duration-500 cursor-pointer group">
+                    <div className="relative w-full h-full opacity-60 group-hover:opacity-100 grayscale group-hover:grayscale-0 transition-all duration-500">
+                      <Image src={partner.src} alt={partner.name} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-contain" />
+                    </div>
                   </motion.div>
                 ))}
               </div>
@@ -152,13 +173,32 @@ export default function AboutPage() {
             <p className="text-2xl text-white/50 font-light max-w-4xl leading-relaxed mb-16">
               Our alumni and analysts have gone on to build incredible careers at top-tier consulting firms, multinational corporations, and impactful non-profits globally.
             </p>
-            <div className="flex flex-wrap justify-center gap-8 md:gap-16 text-3xl md:text-5xl font-black uppercase text-white/20 tracking-tighter">
-              <span className="hover:text-white transition-colors duration-500 cursor-pointer">McKinsey & Co.</span>
-              <span className="hover:text-white transition-colors duration-500 cursor-pointer">BCG</span>
-              <span className="hover:text-white transition-colors duration-500 cursor-pointer">Bain & Co.</span>
-              <span className="hover:text-white transition-colors duration-500 cursor-pointer">Unilever</span>
-              <span className="hover:text-[var(--color-primary)] transition-colors duration-500 cursor-pointer">GOTO</span>
-            </div>
+            <motion.div 
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, margin: "-100px" }}
+              variants={staggerContainer}
+              className="w-full"
+            >
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16 items-center">
+                {[
+                  { name: "Unilever", src: "/assets/alumni/unilever1.png" },
+                  { name: "Deloitte", src: "/assets/alumni/deloitte.png" },
+                  { name: "L'Oreal", src: "/assets/alumni/loreal.png" },
+                  { name: "Coca-Cola", src: "/assets/alumni/cocacola.png" },
+                  { name: "Grab", src: "/assets/alumni/Grab.png" },
+                  { name: "OCBC", src: "/assets/alumni/ocbc.png" },
+                  { name: "BTN", src: "/assets/alumni/BTN.png" },
+                  { name: "ASTRA", src: "/assets/alumni/ASTRA.png" }
+                ].map((alumni, i) => (
+                  <motion.div key={i} variants={fadeInUp} className="relative w-full h-24 md:h-32 bg-white/20 border border-white/10 hover:bg-white rounded-2xl md:rounded-3xl p-6 md:p-8 flex items-center justify-center hover:scale-105 transition-all duration-500 cursor-pointer group">
+                    <div className="relative w-full h-full opacity-60 group-hover:opacity-100 grayscale group-hover:grayscale-0 transition-all duration-500">
+                      <Image src={alumni.src} alt={alumni.name} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-contain" />
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
           </div>
         </section>
 
@@ -172,59 +212,86 @@ export default function AboutPage() {
             
             <div className="space-y-32">
               
-              {/* Tier 1: Board of Executives */}
+              {/* Executive Board */}
               <div>
-                <h3 className="text-3xl font-bold mb-16 text-[var(--color-primary)] uppercase tracking-widest border-b border-white/10 pb-4">Board of Executives</h3>
+                <h3 className="text-3xl font-bold mb-16 text-[var(--color-primary)] uppercase tracking-widest border-b border-white/10 pb-4">Executive Board</h3>
                 
                 {/* President (Center Top) */}
                 <div className="flex justify-center mb-16">
                   <div className="w-full max-w-sm">
-                    <TeamMemberCard name={DUMMY_NAME} role="President" imageUrl={DUMMY_PHOTO} />
+                    <TeamMemberCard 
+                      name="Hanz Evan Lie" 
+                      role="President" 
+                      imageUrl="/assets/foto/hans.webp" 
+                      linkedinUrl="https://www.linkedin.com/in/hansevanlie/" 
+                    />
                   </div>
                 </div>
                 
                 {/* Vice Presidents */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
-                  {["VP of Consulting", "VP of Business & Innovation", "VP of External Affairs", "VP of Resource Management"].map((role, i) => (
-                    <TeamMemberCard key={i} name={DUMMY_NAME} role={role} imageUrl={DUMMY_PHOTO} />
-                  ))}
+                  <TeamMemberCard name="Feni Afifah" role="VP of Consulting" imageUrl="/assets/foto/feni.webp" linkedinUrl="https://www.linkedin.com/in/feniafifakurniawati" />
+                  <TeamMemberCard name="Aaliyah Kusuma" role="VP of External Affairs" imageUrl="/assets/foto/aal.webp" linkedinUrl="https://www.linkedin.com/in/aaliyahkusuma/" />
+                  <TeamMemberCard name="Luqman Fahrul" role="VP of Business & Innovation" imageUrl="/assets/foto/fahrul.webp" linkedinUrl="https://www.linkedin.com/in/faaahrull/" />
+                  <TeamMemberCard name="Naailul Azmi" role="VP of Resource Management" imageUrl="/assets/foto/nazmi.webp" linkedinUrl="https://www.linkedin.com/in/naailul-azmi/en" />
                 </div>
               </div>
 
-              {/* Tier 2: Directors */}
+              {/* Strategy and Growth */}
               <div>
-                <h3 className="text-3xl font-bold mb-16 text-[var(--color-primary)] uppercase tracking-widest border-b border-white/10 pb-4">Directors</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
-                  {["Strategy & Growth", "Client Acquisition", "Marketing", "Human Resources", "Legal & Finance", "Consulting"].map((dept, i) => (
-                    <TeamMemberCard key={i} name={DUMMY_NAME} role={`Director of ${dept}`} imageUrl={DUMMY_PHOTO} />
-                  ))}
+                <h3 className="text-3xl font-bold mb-16 text-[var(--color-primary)] uppercase tracking-widest border-b border-white/10 pb-4">Strategy and Growth</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 justify-center">
+                  <TeamMemberCard name="Rafie Ramadhan Al Aziz Zein" role="Director" imageUrl={DUMMY_PHOTO} linkedinUrl="https://linkedin.com/in/rafie-zein/" />
+                  <TeamMemberCard name="Miftanun Nisa" role="Co-Director" imageUrl="/assets/foto/nisa.webp" linkedinUrl="https://linkedin.com/in/miftanunisa" />
+                  <TeamMemberCard name="Khal Putra Adam" role="Manager of Product" imageUrl="/assets/foto/khal.webp" linkedinUrl="https://www.linkedin.com/in/khal-putra-adam-63867b314/" />
+                  <TeamMemberCard name="Diffa Felisha Putri Agustian" role="Manager of Program" imageUrl="/assets/foto/feli.webp" linkedinUrl="https://www.linkedin.com/in/diffa-felisha-putri-agustian-135185322/" />
                 </div>
               </div>
 
-              {/* Tier 3: Co-Directors */}
+              {/* Human Resources */}
               <div>
-                <h3 className="text-3xl font-bold mb-16 text-[var(--color-primary)] uppercase tracking-widest border-b border-white/10 pb-4">Co-Directors</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 justify-center">
-                  {["Strategy & Growth", "Human Resources", "Marketing", "Consulting"].map((dept, i) => (
-                    <TeamMemberCard key={i} name={DUMMY_NAME} role={`Co-Director of ${dept}`} imageUrl={DUMMY_PHOTO} />
-                  ))}
+                <h3 className="text-3xl font-bold mb-16 text-[var(--color-primary)] uppercase tracking-widest border-b border-white/10 pb-4">Human Resources</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 justify-center max-w-3xl mx-auto">
+                  <TeamMemberCard name="Diva Salsa" role="Director" imageUrl="/assets/foto/diva.webp" linkedinUrl="https://www.linkedin.com/in/diva-salsa-305587265/" />
+                  <TeamMemberCard name="Nada Shofia Handayani" role="Co-Director" imageUrl="/assets/foto/dashi.webp" linkedinUrl="https://www.linkedin.com/in/nadashofiahandayani/" />
                 </div>
               </div>
 
-              {/* Tier 4: Managers */}
+              {/* Legal and Finance */}
               <div>
-                <h3 className="text-3xl font-bold mb-16 text-[var(--color-primary)] uppercase tracking-widest border-b border-white/10 pb-4">Managers</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
-                  {[
-                    "Client Relation", 
-                    "Knowledge", 
-                    "Product", 
-                    "Program", 
-                    "Legal",
-                    "Finance"
-                  ].map((dept, i) => (
-                    <TeamMemberCard key={i} name={DUMMY_NAME} role={`Manager of ${dept}`} imageUrl={DUMMY_PHOTO} />
-                  ))}
+                <h3 className="text-3xl font-bold mb-16 text-[var(--color-primary)] uppercase tracking-widest border-b border-white/10 pb-4">Legal and Finance</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 justify-center">
+                  <TeamMemberCard name="Makuta Wiku Aji" role="Director" imageUrl="/assets/foto/wiku.webp" linkedinUrl="https://www.linkedin.com/in/makutawiku/" />
+                  <TeamMemberCard name="Natasya Farezla" role="Manager of Finance" imageUrl="/assets/foto/nasya.webp" linkedinUrl="https://www.linkedin.com/in/natasyafarezla/" />
+                  <TeamMemberCard name="Az Zahra Leilany Widjanarka" role="Manager of Legal" imageUrl="/assets/foto/zahra.webp" linkedinUrl="https://linkedin.com/in/az-zahra-widjanarka/" />
+                </div>
+              </div>
+
+              {/* Marketing */}
+              <div>
+                <h3 className="text-3xl font-bold mb-16 text-[var(--color-primary)] uppercase tracking-widest border-b border-white/10 pb-4">Marketing</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 justify-center max-w-3xl mx-auto">
+                  <TeamMemberCard name="Virgie Manera" role="Director" imageUrl="/assets/foto/virgie.webp" linkedinUrl="https://tinyurl.com/linkedinvirgiemanera" />
+                  <TeamMemberCard name="Nadine Candra Prabawati" role="Co-Director" imageUrl="/assets/foto/nadine.webp" linkedinUrl="https://linkedin.com/in/nadine-candra-prabawati" />
+                </div>
+              </div>
+
+              {/* Client Acquisition */}
+              <div>
+                <h3 className="text-3xl font-bold mb-16 text-[var(--color-primary)] uppercase tracking-widest border-b border-white/10 pb-4">Client Acquisition</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 justify-center">
+                  <TeamMemberCard name="Nikita Costy" role="Director" imageUrl="/assets/foto/niki.webp" linkedinUrl="https://linkedin.com/in/nikitacostyy" />
+                  <TeamMemberCard name="Janice Rafaela Putri Agita" role="Manager of Client Relation" imageUrl="/assets/foto/janice.webp" linkedinUrl="https://www.linkedin.com/in/janice-rafaela-000861322?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" />
+                  <TeamMemberCard name="Sitorus Marlon Patrick Valentino" role="Manager of Knowledge" imageUrl="/assets/foto/marlon1.webp" linkedinUrl="https://www.linkedin.com/in/marlon-sitorus?utm_source=share_via&utm_content=profile&utm_medium=member_ios" />
+                </div>
+              </div>
+
+              {/* Consulting */}
+              <div>
+                <h3 className="text-3xl font-bold mb-16 text-[var(--color-primary)] uppercase tracking-widest border-b border-white/10 pb-4">Consulting</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 justify-center max-w-3xl mx-auto">
+                  <TeamMemberCard name="Nazwa Humaira Ramadhani" role="Director" imageUrl="/assets/foto/nazwa.webp" linkedinUrl="https://www.linkedin.com/in/nazwa-humaira-ramadhani/" />
+                  <TeamMemberCard name="Muhammad Fathi lanang Kayana" role="Co-Director" imageUrl="/assets/foto/fathi.png" linkedinUrl="https://www.linkedin.com/in/muh-fathi-lanang-k/" />
                 </div>
               </div>
 
