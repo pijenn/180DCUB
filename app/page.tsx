@@ -60,7 +60,7 @@ export default function Home() {
           {/* Subtle blurred background element */}
           <div className="absolute top-[-10%] right-[-5%] w-[800px] h-[800px] bg-[var(--color-primary)]/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
-          <div className="absolute top-[-10%] md:top-[-45%] right-[-30%] md:right-[-25%] w-[800px] md:w-[800px] h-[900px] md:h-[900px] z-0 pointer-events-none">
+          <div className="absolute top-[-10%] md:top-[-45%] right-[-50%] md:right-[-25%] w-[500px] md:w-[800px] h-[600px] md:h-[900px] z-0 pointer-events-none">
               <motion.div
                 initial={{ opacity: 0, scale: 1.1, filter: "blur(20px)" }}
                 animate={{ opacity: 0.25, scale: 1, filter: "blur(10px)" }}
@@ -90,24 +90,24 @@ export default function Home() {
               </span>
             </motion.div>
 
-            <motion.h1 variants={textReveal} className="text-7xl md:text-9xl lg:text-[11rem] font-black tracking-tighter leading-[0.85] text-white uppercase min-h-[1.1em] flex items-center">
+            <motion.h1 variants={textReveal} className="text-6xl sm:text-7xl md:text-9xl lg:text-[11rem] font-black tracking-tighter leading-[0.85] text-white uppercase min-h-[1.1em] flex items-center">
               <TypewriterEffect text="Impact" delay={0.8} cursor={false} />
             </motion.h1>
-            <motion.h1 variants={textReveal} className="text-7xl md:text-9xl lg:text-[11rem] font-black tracking-tighter leading-[0.85] text-[var(--color-primary)] uppercase min-h-[1.1em] flex items-center">
+            <motion.h1 variants={textReveal} className="text-6xl sm:text-7xl md:text-9xl lg:text-[11rem] font-black tracking-tighter leading-[0.85] text-[var(--color-primary)] uppercase min-h-[1.1em] flex items-center">
               <TypewriterEffect text="Thrivers." delay={1.5} cursor={true} />
             </motion.h1>
 
-            <motion.p variants={textReveal} className="text-2xl md:text-4xl text-white/50 font-light mt-12 max-w-4xl leading-snug">
+            <motion.p variants={textReveal} className="text-xl md:text-4xl text-white/50 font-light mt-8 md:mt-12 max-w-4xl leading-snug">
               Transforming non-profits and social enterprises through world-class student consulting.
             </motion.p>
 
-            <motion.div variants={textReveal} className="mt-20 flex items-center gap-8">
+            <motion.div variants={textReveal} className="mt-12 md:mt-20 flex items-center gap-8">
               <Link
                 href="/about"
-                className="group flex items-center gap-6 text-2xl font-medium"
+                className="group flex items-center gap-4 md:gap-6 text-lg md:text-2xl font-medium"
               >
-                <div className="w-20 h-20 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-[var(--color-primary)] group-hover:border-[var(--color-primary)] group-hover:text-black transition-all duration-500 ease-out">
-                  <ArrowRight className="w-8 h-8 -rotate-45 group-hover:rotate-0 transition-transform duration-500" />
+                <div className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-[var(--color-primary)] group-hover:border-[var(--color-primary)] group-hover:text-black transition-all duration-500 ease-out">
+                  <ArrowRight className="w-6 h-6 md:w-8 md:h-8 -rotate-45 group-hover:rotate-0 transition-transform duration-500" />
                 </div>
                 <span className="group-hover:text-[var(--color-primary)] transition-colors duration-300">Discover Our Story</span>
               </Link>
@@ -115,8 +115,7 @@ export default function Home() {
           </motion.div>
         </section>
 
-        {/* 2. Previous Clients & Partners Marquee - Clean & Borderless */}
-        <section className="py-24 relative">
+        <section className="py-20 relative">
           <div className="absolute inset-0 bg-gradient-to-r from-background via-white/[0.02] to-background -z-10" />
           <div className="w-full inline-flex flex-nowrap overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_200px,_black_calc(100%-200px),transparent_100%)]">
             <motion.ul
@@ -124,7 +123,6 @@ export default function Home() {
               animate={{ x: ["0%", "-50%"] }}
               transition={{ repeat: Infinity, ease: "linear", duration: 25 }}
             >
-              {/* Duplicate list for seamless loop */}
               {[...Array(2)].map((_, idx) => (
                 <div key={idx} className="flex gap-8 md:gap-12 items-center mx-4 md:mx-6">
                   {[
@@ -133,7 +131,7 @@ export default function Home() {
                   ].map((logo, i) => (
                     <div
                       key={i}
-                      className="relative group flex items-center justify-center h-16 w-32 md:h-20 md:w-40 bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white hover:border-transparent rounded-2xl hover:scale-105 transition-all duration-500"
+                      className="relative group flex items-center justify-center h-16 w-32 md:h-30 md:w-50 bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white hover:border-transparent rounded-2xl hover:scale-105 transition-all duration-500"
                     >
                       {/* Before Hover: White/Light Logo on Dark Glass */}
                       <div className="absolute inset-0 p-4 md:p-6 flex items-center justify-center opacity-70 group-hover:opacity-0 transition-opacity duration-500">

@@ -5,7 +5,7 @@ import { ReactNode } from 'react';
 
 export function SmoothScroll({ children }: { children: ReactNode }) {
   return (
-    <ReactLenis root options={{ lerp: 0.05, syncTouch: true }}>
+    <ReactLenis root options={{ lerp: 0.05, syncTouch: true, autoResize: true }}>
       {children}
     </ReactLenis>
   );

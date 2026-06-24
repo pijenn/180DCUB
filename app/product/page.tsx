@@ -7,7 +7,7 @@ import { Product, ProductType, mockProducts } from "@/lib/mockData";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { SmoothScroll } from "@/components/ui/SmoothScroll";
-
+import { useLenis } from 'lenis/react';
 // Animation Variants
 const staggerContainer: Variants = {
   hidden: { opacity: 0 },
@@ -70,6 +70,17 @@ export default function ProductCatalog() {
   const filteredProducts = products.filter(
     (product) => activeTab === "ALL" || product.type === activeTab
   );
+
+  const lenis = useLenis();
+
+  useEffect(() => {
+    if (!loading && lenis) {
+      // Force lenis to recalculate height after DOM updates
+      setTimeout(() => {
+        lenis.resize();
+      }, 100);
+    }
+  }, [loading, activeTab, lenis]);
 
   return (
     <SmoothScroll>

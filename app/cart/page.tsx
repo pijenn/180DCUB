@@ -359,7 +359,7 @@ export default function CartPage() {
 
           {/* Order Summary Section */}
           <div className="lg:col-span-1 space-y-6">
-            <div className="bg-card rounded-3xl border border-border p-6 space-y-6 shadow-sm sticky top-24">
+            <div className="bg-card rounded-3xl border border-border p-6 space-y-6 shadow-sm sticky top-24 px-2">
               <h3 className="text-xl font-bold">Order Summary</h3>
 
               {/* Voucher Input */}
