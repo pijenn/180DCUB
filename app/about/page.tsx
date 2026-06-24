@@ -102,7 +102,6 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* 3 & 4. Our Clients & Partners - Clean Borderless */}
         <section className="relative py-32 px-6 bg-white/[0.02] overflow-hidden">
           {/* Background Logo */}
       

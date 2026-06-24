@@ -246,7 +246,7 @@ export default function Home() {
 
           <div className="max-w-7xl mx-auto relative z-10 text-black flex flex-col items-center text-center">
             <h2 className="text-6xl md:text-9xl font-black uppercase tracking-tighter leading-[0.9] mb-12">
-              Ready to <br /> transform?
+              Ready to <br /> Lead The Change?
             </h2>
             <Link
               href="https://wa.me/6289506570134"
@@ -254,7 +254,7 @@ export default function Home() {
               rel="noopener noreferrer"
               className="group flex items-center gap-6 bg-black text-white px-12 py-6 rounded-full text-2xl font-bold hover:scale-105 transition-all duration-500 ease-out"
             >
-              Let's Talk
+              Let's Stay Connected
               <div className="w-3 h-3 rounded-full bg-[var(--color-primary)] group-hover:animate-ping" />
             </Link>
           </div>
