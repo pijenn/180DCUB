@@ -219,7 +219,7 @@ export default function AboutPage() {
                 <div className="flex justify-center mb-16">
                   <div className="w-full max-w-sm">
                     <TeamMemberCard 
-                      name="Hanz Evan Lie" 
+                      name="Hans Evan Lie" 
                       role="President" 
                       imageUrl="/assets/foto/hans.webp" 
                       linkedinUrl="https://www.linkedin.com/in/hansevanlie/" 

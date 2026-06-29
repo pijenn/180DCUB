@@ -82,6 +82,38 @@ export default function ProductCatalog() {
     }
   }, [loading, activeTab, lenis]);
 
+  // COMING SOON OVERRIDE
+  const isComingSoon = true;
+  if (isComingSoon) {
+    return (
+      <SmoothScroll>
+        <div className="flex flex-col w-full min-h-screen bg-background selection:bg-[var(--color-primary)] selection:text-black items-center justify-center relative overflow-hidden">
+          <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-[var(--color-primary)]/10 rounded-full blur-[150px] -z-10 pointer-events-none" />
+          
+          <motion.div 
+            className="flex flex-col items-center z-10 p-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-black tracking-tighter leading-[0.85] text-white uppercase text-center mb-8">
+              Coming <span className="text-transparent bg-clip-text bg-[var(--color-primary)]">Soon.</span>
+            </h1>
+            <p className="text-xl md:text-3xl text-white/50 font-light max-w-3xl text-center leading-snug">
+              Our payment system is currently undergoing maintenance. We'll be back shortly!
+            </p>
+            <button 
+              onClick={() => window.location.href = "/"}
+              className="mt-12 px-8 py-4 rounded-full text-sm tracking-widest uppercase font-bold transition-all duration-300 border border-white/20 text-white/50 hover:border-[var(--color-primary)] hover:text-white"
+            >
+              Back to Home
+            </button>
+          </motion.div>
+        </div>
+      </SmoothScroll>
+    );
+  }
+
   return (
     <SmoothScroll>
       <div className="flex flex-col w-full min-h-screen bg-background selection:bg-[var(--color-primary)] selection:text-black pb-32">
