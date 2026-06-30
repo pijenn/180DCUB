@@ -152,7 +152,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
             Coming <span className="text-transparent bg-clip-text bg-[var(--color-primary)]">Soon.</span>
           </h1>
           <p className="text-xl md:text-3xl text-white/50 font-light max-w-3xl text-center leading-snug">
-            Our payment system is currently undergoing maintenance. We'll be back shortly!
+           Our payment system is currently undergoing maintenance. If you wish to purchase our product, please contact us : wa.me/62 81521916667 (Mela) | wa.me/6285121548160 (Khal). 
           </p>
           <button 
             onClick={() => window.location.href = "/product"}
