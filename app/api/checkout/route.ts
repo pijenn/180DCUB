@@ -1,34 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// We have to use require because midtrans-client often lacks types
-const midtransClient = require("midtrans-client");
-
-const snap = new midtransClient.Snap({
-  isProduction: false,
-  serverKey: process.env.MIDTRANS_SERVER_KEY || "",
-  clientKey: process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || "",
-});
-
-const mapPaymentMethod = (selected: string) => {
-  switch (selected) {
-    case "VIRTUAL_ACCOUNT":
-      return ["bank_transfer", "echannel"]; // echannel is Mandiri Bill
-    case "QRIS":
-      return ["gopay", "other_qris"];
-    case "CREDIT_CARD":
-      return ["credit_card"];
-    case "GOPAY":
-      return ["gopay"];
-    case "SHOPEEPAY":
-      return ["shopeepay"];
-    case "OVO":
-      return ["gopay"]; // Midtrans groups many e-wallets. Just fallback if needed, but we'll pass standard ones.
-    default:
-      return [];
-  }
-};
-
 export async function POST(req: Request) {
   try {
     const supabase = await createClient();
@@ -39,7 +11,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { cartItems, finalTotal, voucherId, selectedPayment } = body;
+    const { cartItems, finalTotal, voucherId } = body;
 
     if (!cartItems || cartItems.length === 0) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
@@ -77,34 +49,28 @@ export async function POST(req: Request) {
       throw new Error("Failed to insert transaction items: " + itemsError.message);
     }
 
-    // 3. Create Midtrans Snap Token
+    // 3. Generate Pakasir Checkout URL
     const orderId = `ORDER-${transaction.id}`;
     
-    let enabledPayments = mapPaymentMethod(selectedPayment);
-    if (selectedPayment === "OVO") enabledPayments = ["gopay"]; // For Sandbox, OVO might not be enabled. Just use gopay as a fallback for the sake of demo, or omit enabledPayments. Let's pass it anyway.
-
-    const parameter = {
-      transaction_details: {
-        order_id: orderId,
-        gross_amount: finalTotal,
-      },
-      customer_details: {
-        email: user.email,
-        first_name: user.user_metadata?.full_name || "User",
-      },
-      enabled_payments: enabledPayments.length > 0 ? enabledPayments : undefined,
-    };
-
-    const snapResponse = await snap.createTransaction(parameter);
-
-    // 4. Update transaction with midtrans order id (we used our own ID for the order, but we can store the midtrans transaction ID later on webhook)
+    // We update the transaction with our own generated ID as the identifier
+    // For Pakasir, we use this orderId as reference
     await supabase
       .from("transactions")
-      .update({ midtrans_transaction_id: orderId })
+      .update({ midtrans_transaction_id: orderId }) // We can keep using this column or rename it later, but using it avoids schema change
       .eq("id", transaction.id);
 
+    const slug = process.env.PAKASIR_SLUG || "";
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    
+    if (!slug) {
+      throw new Error("PAKASIR_SLUG environment variable is not set");
+    }
+
+    // Format: https://app.pakasir.com/pay/{slug}/{amount}?order_id={order_id}&qris_only=1&redirect={redirect_url}
+    const checkoutUrl = `https://app.pakasir.com/pay/${slug}/${finalTotal}?order_id=${orderId}&qris_only=1&redirect=${encodeURIComponent(baseUrl + '/success')}`;
+
     return NextResponse.json({ 
-      token: snapResponse.token,
+      checkout_url: checkoutUrl,
       transactionId: transaction.id 
     });
 

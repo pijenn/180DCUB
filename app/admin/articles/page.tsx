@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, Edit2, Trash2, Loader2, ExternalLink } from "lucide-react";
+import { toast } from "react-hot-toast";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -74,8 +75,9 @@ export default function ArticlesAdmin() {
     if (!error) {
       setIsModalOpen(false);
       fetchArticles();
+      toast.success("Article saved successfully!");
     } else {
-      alert("Failed to save article: " + error.message);
+      toast.error("Failed to save article: " + error.message);
     }
     setIsSaving(false);
   };
@@ -85,8 +87,9 @@ export default function ArticlesAdmin() {
       const { error } = await supabase.from("articles").delete().eq("id", id);
       if (!error) {
         fetchArticles();
+        toast.success("Article deleted successfully!");
       } else {
-        alert("Failed to delete article: " + error.message);
+        toast.error("Failed to delete article: " + error.message);
       }
     }
   };

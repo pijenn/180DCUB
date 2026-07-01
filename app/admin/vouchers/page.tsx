@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, Edit2, Trash2, Loader2, Copy } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 export default function VouchersAdmin() {
   const [vouchers, setVouchers] = useState<any[]>([]);
@@ -76,8 +77,9 @@ export default function VouchersAdmin() {
     if (!error) {
       setIsModalOpen(false);
       fetchVouchers();
+      toast.success("Voucher saved successfully!");
     } else {
-      alert("Failed to save voucher: " + error.message);
+      toast.error("Failed to save voucher: " + error.message);
     }
     setIsSaving(false);
   };
@@ -87,8 +89,9 @@ export default function VouchersAdmin() {
       const { error } = await supabase.from("voucher_code").delete().eq("id", id);
       if (!error) {
         fetchVouchers();
+        toast.success("Voucher deleted successfully!");
       } else {
-        alert("Failed to delete voucher: " + error.message);
+        toast.error("Failed to delete voucher: " + error.message);
       }
     }
   };

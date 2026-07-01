@@ -83,7 +83,7 @@ export default function ProductCatalog() {
   }, [loading, activeTab, lenis]);
 
   // COMING SOON OVERRIDE
-  const isComingSoon = true;
+  const isComingSoon = false;
   if (isComingSoon) {
     return (
       <SmoothScroll>

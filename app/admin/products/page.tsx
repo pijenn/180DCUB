@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, Edit2, Trash2, Loader2 } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 export default function ProductsAdmin() {
   const [products, setProducts] = useState<any[]>([]);
@@ -83,8 +84,9 @@ export default function ProductsAdmin() {
     if (!error) {
       setIsModalOpen(false);
       fetchProducts();
+      toast.success("Product saved successfully!");
     } else {
-      alert("Failed to save product: " + error.message);
+      toast.error("Failed to save product: " + error.message);
     }
     setIsSaving(false);
   };
@@ -94,8 +96,9 @@ export default function ProductsAdmin() {
       const { error } = await supabase.from("products").delete().eq("id", id);
       if (!error) {
         fetchProducts();
+        toast.success("Product deleted successfully!");
       } else {
-        alert("Failed to delete product: " + error.message);
+        toast.error("Failed to delete product: " + error.message);
       }
     }
   };

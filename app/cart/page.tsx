@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Loader2, Trash2, ArrowLeft, Ticket, CreditCard, Wallet, QrCode, Banknote } from "lucide-react";
+import { toast } from "react-hot-toast";
 import Link from "next/link";
 
 interface CartItem {
@@ -22,12 +23,7 @@ interface CartItem {
 }
 
 const PAYMENT_METHODS = [
-  { id: "VIRTUAL_ACCOUNT", name: "Bank Transfer (Virtual Account)", icon: Banknote },
   { id: "QRIS", name: "QRIS", icon: QrCode },
-  { id: "CREDIT_CARD", name: "Kartu Kredit", icon: CreditCard },
-  { id: "GOPAY", name: "GoPay", icon: Wallet },
-  { id: "SHOPEEPAY", name: "ShopeePay", icon: Wallet },
-  { id: "OVO", name: "OVO", icon: Wallet },
 ];
 
 export default function CartPage() {
@@ -42,7 +38,7 @@ export default function CartPage() {
   const [voucherError, setVoucherError] = useState("");
 
   // Payment state
-  const [selectedPayment, setSelectedPayment] = useState<string>("VIRTUAL_ACCOUNT");
+  const [selectedPayment, setSelectedPayment] = useState<string>("QRIS");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const supabase = createClient();
@@ -84,21 +80,6 @@ export default function CartPage() {
 
   useEffect(() => {
     fetchCart();
-
-    // Inject Midtrans Snap script
-    const snapScript = "https://app.sandbox.midtrans.com/snap/snap.js";
-    const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || "";
-    
-    const script = document.createElement("script");
-    script.src = snapScript;
-    script.setAttribute("data-client-key", clientKey);
-    script.async = true;
-
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
   }, []);
 
   const handleDelete = async (id: string) => {
@@ -179,29 +160,21 @@ export default function CartPage() {
         throw new Error(data.error || "Failed to create transaction");
       }
 
-      // Open Midtrans Snap window
-      (window as any).snap.pay(data.token, {
-        onSuccess: async function (result: any) {
-          // Clear cart
-          for (const item of cartItems) {
-            await supabase.from("cart_items").delete().eq("id", item.id);
-          }
-          router.push("/success");
-        },
-        onPending: function (result: any) {
-          alert("Waiting for your payment!");
-        },
-        onError: function (result: any) {
-          alert("Payment failed!");
-        },
-        onClose: function () {
-          setIsCheckingOut(false);
-        },
-      });
+      // Clear cart items before redirecting
+      for (const item of cartItems) {
+        await supabase.from("cart_items").delete().eq("id", item.id);
+      }
+
+      // Redirect to Pakasir checkout URL
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        throw new Error("No checkout URL received");
+      }
 
     } catch (error: any) {
       console.error(error);
-      alert("Error during checkout: " + error.message);
+      toast.error("Error during checkout: " + error.message);
       setIsCheckingOut(false);
     }
   };
@@ -242,21 +215,9 @@ export default function CartPage() {
   const paymentFee = useMemo(() => {
     if (netTotal === 0) return 0;
     
-    switch (selectedPayment) {
-      case "VIRTUAL_ACCOUNT":
-        return 4000;
-      case "QRIS":
-        return Math.floor(netTotal * 0.007);
-      case "CREDIT_CARD":
-        return Math.floor(netTotal * 0.029) + 2000;
-      case "GOPAY":
-      case "SHOPEEPAY":
-      case "OVO":
-        return Math.floor(netTotal * 0.02);
-      default:
-        return 0;
-    }
-  }, [netTotal, selectedPayment]);
+    // Pakasir QRIS Fee: 0.7% + Rp 310
+    return Math.floor(netTotal * 0.007) + 310;
+  }, [netTotal]);
 
   const finalTotal = netTotal + paymentFee;
 

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import crypto from "crypto";
 import { sendTransactionSuccessEmails } from "@/lib/email";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -11,45 +10,51 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    console.log("Midtrans Webhook Received:", body);
+    console.log("Pakasir Webhook Received:", body);
 
     const {
+      amount,
       order_id,
-      status_code,
-      gross_amount,
-      signature_key,
-      transaction_status,
+      project,
+      status,
     } = body;
 
-    const serverKey = process.env.MIDTRANS_SERVER_KEY || "";
+    const apiKey = process.env.PAKASIR_API_KEY || "";
+    const slug = process.env.PAKASIR_SLUG || "";
 
-    // 1. Verify Signature
-    const hash = crypto
-      .createHash("sha512")
-      .update(order_id + status_code + gross_amount + serverKey)
-      .digest("hex");
-
-    if (hash !== signature_key) {
-      console.error("Invalid Midtrans Signature");
-      return NextResponse.json({ error: "Invalid signature" }, { status: 403 });
+    if (!apiKey || !slug) {
+      console.error("Pakasir API Key or Slug is not set in environment variables");
+      return NextResponse.json({ error: "Server Configuration Error" }, { status: 500 });
     }
+
+    // Ensure this webhook is meant for our project
+    if (project !== slug) {
+      return NextResponse.json({ error: "Invalid project slug" }, { status: 400 });
+    }
+
+    // 1. Validate Transaction via Pakasir API
+    const verifyUrl = `https://app.pakasir.com/api/transactiondetail?project=${slug}&amount=${amount}&order_id=${order_id}&api_key=${apiKey}`;
+    const response = await fetch(verifyUrl);
+    
+    if (!response.ok) {
+      console.error("Failed to verify transaction with Pakasir", await response.text());
+      return NextResponse.json({ error: "Verification Failed" }, { status: 400 });
+    }
+
+    const data = await response.json();
+    if (!data.transaction) {
+      console.error("Invalid response from Pakasir verification");
+      return NextResponse.json({ error: "Verification Failed" }, { status: 400 });
+    }
+
+    const transactionStatus = data.transaction.status;
 
     // 2. Determine our internal status
     let internalStatus = "PENDING";
-    if (
-      transaction_status === "capture" ||
-      transaction_status === "settlement"
-    ) {
+    if (transactionStatus === "completed") {
       internalStatus = "SUCCESS";
-    } else if (
-      transaction_status === "deny" ||
-      transaction_status === "cancel"
-    ) {
+    } else if (transactionStatus === "canceled") {
       internalStatus = "FAILED";
-    } else if (transaction_status === "expire") {
-      internalStatus = "EXPIRED";
-    } else if (transaction_status === "pending") {
-      internalStatus = "PENDING";
     }
 
     // 3. Update Database
@@ -64,7 +69,8 @@ export async function POST(req: Request) {
       .single();
 
     if (fetchError || !currentTx) {
-      throw new Error("Transaction not found");
+      console.error("Transaction not found:", transactionId);
+      return NextResponse.json({ error: "Transaction not found" }, { status: 404 });
     }
 
     if (currentTx.status !== internalStatus) {

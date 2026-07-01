@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, Edit2, Trash2, Loader2, Calendar } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 export default function MentoringAdmin() {
   const [schedules, setSchedules] = useState<any[]>([]);
@@ -87,7 +88,7 @@ export default function MentoringAdmin() {
     setIsSaving(true);
 
     if (!formData.product_id) {
-      alert("Please select a mentoring product.");
+      toast.error("Please select a mentoring product.");
       setIsSaving(false);
       return;
     }
@@ -116,8 +117,9 @@ export default function MentoringAdmin() {
     if (!error) {
       setIsModalOpen(false);
       fetchData();
+      toast.success("Schedule saved successfully!");
     } else {
-      alert("Failed to save schedule: " + error.message);
+      toast.error("Failed to save schedule: " + error.message);
     }
     setIsSaving(false);
   };
@@ -127,8 +129,9 @@ export default function MentoringAdmin() {
       const { error } = await supabase.from("mentoring_schedules").delete().eq("id", id);
       if (!error) {
         fetchData();
+        toast.success("Schedule deleted successfully!");
       } else {
-        alert("Failed to delete schedule: " + error.message);
+        toast.error("Failed to delete schedule: " + error.message);
       }
     }
   };

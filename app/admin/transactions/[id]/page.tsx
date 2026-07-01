@@ -111,7 +111,7 @@ export default async function AdminTransactionDetailPage({
               </div>
               {tx.midtrans_transaction_id && (
                 <div>
-                  <p className="text-muted-foreground">Midtrans ID</p>
+                  <p className="text-muted-foreground">Pakasir ID</p>
                   <p className="font-medium break-all">{tx.midtrans_transaction_id}</p>
                 </div>
               )}

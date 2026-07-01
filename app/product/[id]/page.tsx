@@ -4,6 +4,7 @@ import { useEffect, useState, use } from "react";
 import { Product, MentoringSchedule, mockProducts, mockSchedules } from "@/lib/mockData";
 import { createClient } from "@/lib/supabase/client";
 import { ArrowLeft, Clock, Calendar, CheckCircle2, Loader2, ShoppingCart } from "lucide-react";
+import { toast } from "react-hot-toast";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -86,7 +87,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        alert("Please login to add items to cart");
+        toast.error("Please login to add items to cart");
         router.push("/login");
         return;
       }
@@ -129,19 +130,19 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
 
       if (insertError) throw insertError;
 
-      alert("Added to cart successfully!");
+      toast.success("Added to cart successfully!");
       router.push("/cart");
 
     } catch (error: any) {
       console.error("Error adding to cart:", error);
-      alert("Failed to add to cart: " + error.message);
+      toast.error("Failed to add to cart: " + error.message);
     } finally {
       setIsAddingToCart(false);
     }
   };
 
   // COMING SOON OVERRIDE
-  const isComingSoon = true;
+  const isComingSoon = false;
   if (isComingSoon) {
     return (
       <div className="flex flex-col w-full min-h-screen bg-background selection:bg-[var(--color-primary)] selection:text-black items-center justify-center relative overflow-hidden">
