@@ -47,7 +47,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <img
             src={product.image_url}
             alt={product.name}
-            className="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105 opacity-80 group-hover:opacity-100 grayscale group-hover:grayscale-0"
+            className="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
           />
         ) : (
           <div className="flex items-center justify-center w-full h-full bg-white/5 text-white/20 group-hover:text-[var(--color-primary)] transition-colors duration-500">
@@ -55,9 +55,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
         
-        {/* Overlay Hover State */}
-        <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-700" />
-
+        {/* Overlay Hover State removed for true color */}
         {/* Category Badge */}
         <div className="absolute top-6 left-6 flex gap-3">
           <span className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold tracking-widest uppercase rounded-none bg-black/80 backdrop-blur-md text-white border border-white/10">

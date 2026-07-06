@@ -32,13 +32,7 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect the /product route
-  if (request.nextUrl.pathname.startsWith('/product') && !user) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    url.searchParams.set('redirectedFrom', request.nextUrl.pathname)
-    return NextResponse.redirect(url)
-  }
+  // Protection for /product route has been removed to allow public access
 
   // If user is already logged in and tries to access /login, redirect to /product
   if (request.nextUrl.pathname === '/login' && user) {
