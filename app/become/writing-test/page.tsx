@@ -248,15 +248,7 @@ export default function WritingTestPage() {
             </p>
           </div>
 
-          <a
-            href="https://clips.id/Become180Registration"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-3 bg-[var(--color-primary)] text-black px-8 py-4 rounded-full font-bold text-base hover:bg-white transition-all transform hover:scale-105 shadow-[0_0_25px_rgba(140,198,63,0.35)]"
-          >
-            <span>See The Test!</span>
-            <ExternalLink className="w-4 h-4" />
-          </a>
+
         </div>
 
         {/* Authentication Wall Check */}
