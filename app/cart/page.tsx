@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { Loader2, Trash2, ArrowLeft, Ticket, CreditCard, Wallet, QrCode, Banknote } from "lucide-react";
+import { Loader2, Trash2, ArrowLeft, Ticket, CreditCard, Wallet, QrCode, Banknote, User, Phone, Edit2, CheckCircle2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import Link from "next/link";
 
@@ -31,6 +31,16 @@ export default function CartPage() {
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   
+  // User Profile state
+  const [currentUser, setCurrentUser] = useState<any | null>(null);
+  const [userProfile, setUserProfile] = useState<{ full_name: string; phone_number: string } | null>(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    full_name: "",
+    phone_number: "",
+  });
+
   // Voucher state
   const [voucherCode, setVoucherCode] = useState("");
   const [appliedVoucher, setAppliedVoucher] = useState<any | null>(null);
@@ -44,13 +54,33 @@ export default function CartPage() {
   const supabase = createClient();
   const router = useRouter();
 
-  const fetchCart = async () => {
+  const fetchCartAndProfile = async () => {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
       router.push("/login");
       return;
+    }
+
+    setCurrentUser(user);
+
+    // Fetch user profile from public.users table
+    const { data: profile } = await supabase
+      .from("users")
+      .select("full_name, phone_number")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profile) {
+      setUserProfile({
+        full_name: profile.full_name || user.user_metadata?.full_name || "",
+        phone_number: profile.phone_number || "",
+      });
+      setProfileForm({
+        full_name: profile.full_name || user.user_metadata?.full_name || "",
+        phone_number: profile.phone_number || "",
+      });
     }
 
     const { data: cartData } = await supabase
@@ -79,7 +109,7 @@ export default function CartPage() {
   };
 
   useEffect(() => {
-    fetchCart();
+    fetchCartAndProfile();
   }, []);
 
   const handleDelete = async (id: string) => {
@@ -140,7 +170,60 @@ export default function CartPage() {
     setVoucherError("");
   };
 
-  const handleCheckout = async () => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) return;
+
+    if (!profileForm.full_name.trim()) {
+      toast.error("Please enter your full name");
+      return;
+    }
+
+    if (!profileForm.phone_number.trim()) {
+      toast.error("Please enter your phone number (No HP)");
+      return;
+    }
+
+    setIsSavingProfile(true);
+    try {
+      const { error } = await supabase
+        .from("users")
+        .update({
+          full_name: profileForm.full_name.trim(),
+          phone_number: profileForm.phone_number.trim(),
+        })
+        .eq("id", currentUser.id);
+
+      if (error) throw error;
+
+      setUserProfile({
+        full_name: profileForm.full_name.trim(),
+        phone_number: profileForm.phone_number.trim(),
+      });
+      setIsProfileModalOpen(false);
+      toast.success("Contact information saved!");
+      
+      // Auto-trigger checkout if cart items exist
+      proceedWithCheckout();
+    } catch (error: any) {
+      console.error(error);
+      toast.error("Failed to update profile: " + error.message);
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handleCheckoutClick = () => {
+    // Check if phone number or full name is missing
+    if (!userProfile?.phone_number || !userProfile?.full_name) {
+      setIsProfileModalOpen(true);
+      return;
+    }
+
+    proceedWithCheckout();
+  };
+
+  const proceedWithCheckout = async () => {
     setIsCheckingOut(true);
     try {
       const response = await fetch("/api/checkout", {
@@ -187,7 +270,6 @@ export default function CartPage() {
   const discountAmount = useMemo(() => {
     if (!appliedVoucher) return 0;
     
-    // Calculate eligible subtotal if voucher is specific
     let eligibleSubtotal = subtotal;
     if (appliedVoucher.applicable_type !== "All") {
       eligibleSubtotal = cartItems.reduce((acc, item) => {
@@ -205,7 +287,6 @@ export default function CartPage() {
       }
       return Math.floor(calculatedDiscount);
     } else {
-      // FLAT discount
       return Math.min(appliedVoucher.nilai_potongan, eligibleSubtotal);
     }
   }, [subtotal, cartItems, appliedVoucher]);
@@ -214,7 +295,6 @@ export default function CartPage() {
 
   const paymentFee = useMemo(() => {
     if (netTotal === 0) return 0;
-    
     // Pakasir QRIS Fee: 0.7% + Rp 310
     return Math.floor(netTotal * 0.007) + 310;
   }, [netTotal]);
@@ -320,8 +400,37 @@ export default function CartPage() {
 
           {/* Order Summary Section */}
           <div className="lg:col-span-1 space-y-6">
-            <div className="bg-card rounded-3xl border border-border p-6 space-y-6 shadow-sm sticky top-24 px-2">
+            <div className="bg-card rounded-3xl border border-border p-6 space-y-6 shadow-sm sticky top-24 px-4">
               <h3 className="text-xl font-bold">Order Summary</h3>
+
+              {/* Customer Contact Info Display */}
+              <div className="p-4 bg-muted/30 border border-border rounded-2xl space-y-2 text-sm">
+                <div className="flex justify-between items-center pb-2 border-b border-border">
+                  <span className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">Buyer Information</span>
+                  <button
+                    onClick={() => setIsProfileModalOpen(true)}
+                    className="text-xs text-primary hover:underline font-semibold inline-flex items-center gap-1"
+                  >
+                    <Edit2 className="w-3 h-3" /> Edit
+                  </button>
+                </div>
+
+                <div className="space-y-1 pt-1">
+                  <div className="flex items-center gap-2 text-foreground font-medium">
+                    <User className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <span className="truncate">{userProfile?.full_name || "Name not set"}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-foreground">
+                    <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
+                    {userProfile?.phone_number ? (
+                      <span className="font-mono text-xs">{userProfile.phone_number}</span>
+                    ) : (
+                      <span className="text-xs text-amber-500 font-medium">No HP required before purchase</span>
+                    )}
+                  </div>
+                </div>
+              </div>
 
               {/* Voucher Input */}
               <div className="space-y-3">
@@ -333,12 +442,12 @@ export default function CartPage() {
                       placeholder="e.g. DISCOUNT50"
                       value={voucherCode}
                       onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                      className="flex-1 bg-transparent border border-border px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 uppercase"
+                      className="flex-1 bg-transparent border border-border px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 uppercase text-sm"
                     />
                     <button 
                       onClick={handleApplyVoucher}
                       disabled={isApplyingVoucher || !voucherCode.trim() || cartItems.length === 0}
-                      className="bg-primary/10 text-primary px-6 py-3 rounded-xl font-bold hover:bg-primary/20 transition-colors disabled:opacity-50"
+                      className="bg-primary/10 text-primary px-6 py-3 rounded-xl font-bold hover:bg-primary/20 transition-colors disabled:opacity-50 text-sm"
                     >
                       {isApplyingVoucher ? <Loader2 className="w-5 h-5 animate-spin" /> : "Apply"}
                     </button>
@@ -410,7 +519,7 @@ export default function CartPage() {
               </div>
 
               <button 
-                onClick={handleCheckout}
+                onClick={handleCheckoutClick}
                 disabled={cartItems.length === 0 || isCheckingOut}
                 className="w-full py-4 rounded-full bg-primary text-primary-foreground font-bold text-lg hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/25 flex items-center justify-center gap-2"
               >
@@ -427,6 +536,74 @@ export default function CartPage() {
           </div>
         </div>
       </div>
+
+      {/* Complete Profile & Phone Number Modal */}
+      {isProfileModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-card w-full max-w-md rounded-3xl border border-border shadow-2xl overflow-hidden p-6 sm:p-8 space-y-6">
+            <div className="space-y-2 text-center">
+              <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-2">
+                <Phone className="w-6 h-6" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">Complete Your Details</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Please provide your full name and active WhatsApp/Phone number before proceeding to payment.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveProfile} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">
+                  Nama Lengkap (Full Name) <span className="text-primary">*</span>
+                </label>
+                <input
+                  required
+                  type="text"
+                  placeholder="e.g. John Doe"
+                  value={profileForm.full_name}
+                  onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
+                  className="w-full px-4 py-3 border border-border rounded-xl bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-foreground">
+                  Nomor HP / WhatsApp <span className="text-primary">*</span>
+                </label>
+                <input
+                  required
+                  type="tel"
+                  placeholder="e.g. 081234567890"
+                  value={profileForm.phone_number}
+                  onChange={(e) => setProfileForm({ ...profileForm, phone_number: e.target.value })}
+                  className="w-full px-4 py-3 border border-border rounded-xl bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+                <p className="text-xs text-muted-foreground">
+                  We use this number to send product confirmation and mentoring schedule links.
+                </p>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsProfileModalOpen(false)}
+                  className="flex-1 py-3 px-4 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingProfile}
+                  className="flex-1 py-3 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                >
+                  {isSavingProfile && <Loader2 className="w-4 h-4 animate-spin" />}
+                  <span>Save & Continue</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -72,7 +72,13 @@ export default function Navbar() {
     { name: "Home", href: "/" },
     { name: "About Us", href: "/about" },
     { name: "Product", href: "/product" },
+    { name: "Become 180", href: "/become" },
   ];
+
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname === href || pathname.startsWith(href + "/");
+  };
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-black/40 backdrop-blur-xl border-b border-white/10 transition-all duration-300">
@@ -100,7 +106,7 @@ export default function Navbar() {
                   href={link.href}
                   className={cn(
                     "text-xs font-bold uppercase tracking-widest transition-all hover:text-primary hover:-translate-y-0.5",
-                    pathname === link.href ? "text-primary" : "text-muted-foreground"
+                    isActive(link.href) ? "text-primary" : "text-muted-foreground"
                   )}
                 >
                   {link.name}
@@ -172,7 +178,7 @@ export default function Navbar() {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={cn(
                   "block px-3 py-2 rounded-md text-base font-medium",
-                  pathname === link.href 
+                  isActive(link.href)
                     ? "bg-primary/10 text-primary" 
                     : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 )}

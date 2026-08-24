@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Calendar, Package } from "lucide-react";
+import { ArrowLeft, Calendar, Package, Phone, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { TransactionStatusAction } from "./TransactionStatusAction";
 
@@ -25,7 +25,7 @@ export default async function AdminTransactionDetailPage({
     .from("transactions")
     .select(`
       *,
-      users ( email, full_name ),
+      users ( email, full_name, phone_number ),
       voucher_code ( kode_voucher, tipe_potongan, nilai_potongan )
     `)
     .eq("id", id)
@@ -47,6 +47,16 @@ export default async function AdminTransactionDetailPage({
 
   const user = Array.isArray(tx.users) ? tx.users[0] : tx.users;
   const voucher = Array.isArray(tx.voucher_code) ? tx.voucher_code[0] : tx.voucher_code;
+
+  // Format WhatsApp number link
+  let waUrl = "";
+  if (user?.phone_number) {
+    let cleanNumber = user.phone_number.replace(/[^0-9]/g, "");
+    if (cleanNumber.startsWith("0")) {
+      cleanNumber = "62" + cleanNumber.slice(1);
+    }
+    waUrl = `https://wa.me/${cleanNumber}`;
+  }
 
   return (
     <div className="max-w-4xl space-y-8">
@@ -79,11 +89,32 @@ export default async function AdminTransactionDetailPage({
             <div className="space-y-3 text-sm">
               <div>
                 <p className="text-muted-foreground">Name</p>
-                <p className="font-medium">{user?.full_name}</p>
+                <p className="font-medium text-foreground">{user?.full_name || "Unknown"}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Email</p>
-                <p className="font-medium">{user?.email}</p>
+                <p className="font-medium text-foreground">{user?.email || "No email"}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Phone / WhatsApp</p>
+                {user?.phone_number ? (
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="font-mono font-medium text-foreground">{user.phone_number}</span>
+                    {waUrl && (
+                      <a
+                        href={waUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline inline-flex items-center gap-0.5"
+                        title="Chat on WhatsApp"
+                      >
+                        <ExternalLink className="w-3 h-3" /> WA
+                      </a>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground italic text-xs">Not provided</p>
+                )}
               </div>
             </div>
           </div>

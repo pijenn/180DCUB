@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { Eye } from "lucide-react";
+import { Eye, Phone } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +29,7 @@ export default async function AdminTransactionsPage({
       total_amount,
       created_at,
       midtrans_transaction_id,
-      users ( email, full_name )
+      users ( email, full_name, phone_number )
     `, { count: "exact" })
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
@@ -75,8 +75,14 @@ export default async function AdminTransactionsPage({
                   return (
                     <tr key={tx.id} className="hover:bg-muted/10 transition-colors">
                       <td className="py-4 px-6">
-                        <div className="font-medium">{user?.full_name || "Unknown"}</div>
-                        <div className="text-sm text-muted-foreground">{user?.email || "No email"}</div>
+                        <div className="font-bold text-foreground">{user?.full_name || "Unknown"}</div>
+                        <div className="text-xs text-muted-foreground">{user?.email || "No email"}</div>
+                        {user?.phone_number && (
+                          <div className="flex items-center gap-1 text-xs text-primary font-mono mt-1">
+                            <Phone className="w-3 h-3" />
+                            <span>{user.phone_number}</span>
+                          </div>
+                        )}
                       </td>
                       <td className="py-4 px-6 font-medium">
                         Rp {tx.total_amount.toLocaleString("id-ID")}

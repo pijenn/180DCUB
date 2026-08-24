@@ -10,6 +10,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Verify user has full_name and phone_number in profile
+    const { data: userProfile } = await supabase
+      .from("users")
+      .select("full_name, phone_number")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (!userProfile?.phone_number || !userProfile?.full_name) {
+      return NextResponse.json({ 
+        error: "Please provide your full name and phone number before completing your purchase." 
+      }, { status: 400 });
+    }
+
     const body = await req.json();
     const { cartItems, finalTotal, voucherId } = body;
 
@@ -52,11 +65,9 @@ export async function POST(req: Request) {
     // 3. Generate Pakasir Checkout URL
     const orderId = `ORDER-${transaction.id}`;
     
-    // We update the transaction with our own generated ID as the identifier
-    // For Pakasir, we use this orderId as reference
     await supabase
       .from("transactions")
-      .update({ midtrans_transaction_id: orderId }) // We can keep using this column or rename it later, but using it avoids schema change
+      .update({ midtrans_transaction_id: orderId })
       .eq("id", transaction.id);
 
     const slug = process.env.PAKASIR_SLUG || "";
