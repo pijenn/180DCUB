@@ -207,7 +207,7 @@ export default function BecomePage() {
   const batch_2 = false;
 
   let buttonText = 'Join Us!';
-  let buttonLink = 'https://wa.me/628123456789'; // Default action link
+  let buttonLink = 'clips.id/Become180Registration'; 
 
   if (batch_1 && !batch_2) {
     buttonText = 'Check Announcement!';
