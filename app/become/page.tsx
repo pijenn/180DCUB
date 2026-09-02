@@ -342,7 +342,7 @@ export default function BecomePage() {
               </div>
 
               <a
-                href="https://clips.id/SuratPernyataanOrisinalitas"
+                href="http://clips.biz.id/OriginalityStatement"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-amber-400 text-black font-bold text-sm hover:bg-white transition-all shadow-md"
