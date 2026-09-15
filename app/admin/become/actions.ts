@@ -28,9 +28,32 @@ export async function fetchApplicants() {
 
 export async function saveApplicant(payload: any) {
   try {
+    const dataToSave = { ...payload };
+
+    // If no ID is provided, look up by email first to avoid duplicate entries
+    if (!dataToSave.id && dataToSave.email) {
+      const cleanEmail = dataToSave.email.trim();
+      const { data: existing } = await supabaseAdmin
+        .from('become_applicants')
+        .select('id, nim')
+        .ilike('email', cleanEmail)
+        .maybeSingle();
+
+      if (existing) {
+        dataToSave.id = existing.id;
+        if (!dataToSave.nim) {
+          dataToSave.nim = existing.nim;
+        }
+      } else if (!dataToSave.nim) {
+        dataToSave.nim = cleanEmail;
+      }
+    } else if (!dataToSave.nim && dataToSave.email) {
+      dataToSave.nim = dataToSave.email.trim();
+    }
+
     const { error } = await supabaseAdmin
       .from('become_applicants')
-      .upsert(payload, { onConflict: payload.id ? 'id' : 'nim' });
+      .upsert(dataToSave, { onConflict: dataToSave.id ? 'id' : 'nim' });
 
     if (error) {
       return { success: false, error: error.message };
@@ -44,7 +67,7 @@ export async function saveApplicant(payload: any) {
 
 export async function saveMultipleApplicants(
   applicants: {
-    nim: string;
+    nim?: string;
     name: string;
     email: string;
     status_1: boolean;
@@ -60,9 +83,40 @@ export async function saveMultipleApplicants(
     const chunkSize = 200;
     for (let i = 0; i < applicants.length; i += chunkSize) {
       const chunk = applicants.slice(i, i + chunkSize);
+
+      // Check existing applicants by email in this batch
+      const emails = chunk.map((a) => a.email.trim());
+      const { data: existingData } = await supabaseAdmin
+        .from('become_applicants')
+        .select('id, email, nim')
+        .in('email', emails);
+
+      const existingMap = new Map<string, { id: string; nim: string }>();
+      if (existingData) {
+        existingData.forEach((row: any) => {
+          if (row.email) {
+            existingMap.set(row.email.toLowerCase(), { id: row.id, nim: row.nim });
+          }
+        });
+      }
+
+      const preparedChunk = chunk.map((applicant) => {
+        const cleanEmail = applicant.email.trim();
+        const existing = existingMap.get(cleanEmail.toLowerCase());
+
+        return {
+          ...(existing?.id ? { id: existing.id } : {}),
+          name: applicant.name.trim(),
+          email: cleanEmail,
+          nim: applicant.nim?.trim() || existing?.nim || cleanEmail,
+          status_1: applicant.status_1,
+          status_2: applicant.status_2,
+        };
+      });
+
       const { error } = await supabaseAdmin
         .from('become_applicants')
-        .upsert(chunk, { onConflict: 'nim' });
+        .upsert(preparedChunk, { onConflict: 'id' });
 
       if (error) {
         console.error('Error saving multiple applicants chunk:', error);

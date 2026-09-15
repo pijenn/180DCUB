@@ -104,9 +104,9 @@ function CheckerContent() {
   const [mounted, setMounted] = useState(false);
   const [isLocked, setIsLocked] = useState(true);
 
-  const [nim, setNim] = useState('');
   const [email, setEmail] = useState('');
   const [applicantName, setApplicantName] = useState('');
+  const [applicantNim, setApplicantNim] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<'idle' | 'success' | 'failed'>('idle');
 
@@ -139,16 +139,17 @@ function CheckerContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nim || !email) return;
+    if (!email) return;
 
     setLoading(true);
     setResult('idle');
 
     try {
-      const res = await checkAnnouncementStatus(nim, email);
+      const res = await checkAnnouncementStatus(email);
       if (res.success && res.status) {
         const isPassed = batch === 2 ? res.status.status_2 : res.status.status_1;
         setApplicantName(res.status.name || '');
+        setApplicantNim(res.status.nim || '');
         if (isPassed) {
           setResult('success');
           // Trigger joyful celebration animation & confetti immediately!
@@ -171,6 +172,7 @@ function CheckerContent() {
   const handleReset = () => {
     setResult('idle');
     setApplicantName('');
+    setApplicantNim('');
   };
 
   return (
@@ -242,19 +244,6 @@ function CheckerContent() {
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div>
-                    <label htmlFor="nim" className="sr-only">NIM</label>
-                    <input
-                      id="nim"
-                      name="nim"
-                      type="text"
-                      required
-                      value={nim}
-                      onChange={(e) => setNim(e.target.value)}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] transition-all"
-                      placeholder="Enter your NIM"
-                    />
-                  </div>
-                  <div>
                     <label htmlFor="email" className="sr-only">Email</label>
                     <input
                       id="email"
@@ -264,7 +253,7 @@ function CheckerContent() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] transition-all"
-                      placeholder="Enter your Email"
+                      placeholder="Enter your registered Email"
                     />
                   </div>
                   <button
@@ -371,7 +360,7 @@ function CheckerContent() {
                       {/* Interview Schedule Call-to-Action */}
                       <div className="mt-3 pt-3 border-t border-white/10">
                         <Link
-                          href={`/become/interview-schedule?nim=${encodeURIComponent(nim)}&email=${encodeURIComponent(email)}`}
+                          href={`/become/interview-schedule?nim=${encodeURIComponent(applicantNim || '')}&email=${encodeURIComponent(email)}`}
                           className="w-full flex items-center justify-between gap-3 bg-[var(--color-primary)] text-black font-extrabold p-3.5 sm:p-4 rounded-xl shadow-lg hover:bg-white transition-all group cursor-pointer"
                         >
                           <div className="flex items-center gap-3">
@@ -408,7 +397,7 @@ function CheckerContent() {
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-semibold text-white/60 hover:text-white transition-all cursor-pointer"
                   >
                     <RotateCcw className="w-3 h-3" />
-                    <span>Check another NIM</span>
+                    <span>Check another Email</span>
                   </button>
                 </div>
               </motion.div>
@@ -430,7 +419,7 @@ function CheckerContent() {
                   onClick={handleReset}
                   className="text-sm font-bold tracking-wider uppercase text-[var(--color-primary)] hover:text-white transition-colors cursor-pointer"
                 >
-                  Check another NIM
+                  Check another Email
                 </button>
               </div>
             )}

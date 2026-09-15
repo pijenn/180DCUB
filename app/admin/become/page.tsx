@@ -43,7 +43,7 @@ const DEPARTMENTS = [
 ];
 
 interface ParsedApplicant {
-  nim: string;
+  nim?: string;
   name: string;
   email: string;
   status_1: boolean;
@@ -68,7 +68,7 @@ function parseBulkInput(
   const lines = rawText.split('\n');
   const validApplicants: ParsedApplicant[] = [];
   const parseErrors: ParseError[] = [];
-  const seenNims = new Set<string>();
+  const seenEmails = new Set<string>();
 
   lines.forEach((line, index) => {
     const lineNum = index + 1;
@@ -87,35 +87,62 @@ function parseBulkInput(
       parseErrors.push({
         line: lineNum,
         raw: trimmed,
-        message: 'Must contain "|" separator between NIM, NAME, and EMAIL',
+        message: 'Must contain "|" separator between NAME and EMAIL',
       });
       return;
     }
 
-    if (parts.length < 3) {
+    if (parts.length < 2) {
       parseErrors.push({
         line: lineNum,
         raw: trimmed,
-        message: 'Expected format: NIM | NAME | EMAIL (found fewer than 3 values)',
+        message: 'Expected format: NAME | EMAIL (found fewer than 2 values)',
       });
       return;
     }
 
-    const nim = parts[0];
-    const name = parts[1];
-    const email = parts[2];
+    let name = '';
+    let email = '';
+    let nim = '';
+    let s1 = defaultStatus1;
+    let s2 = defaultStatus2;
 
-    // Automatically skip header line if user included NIM | NAME | EMAIL
-    if (
-      nim.toLowerCase() === 'nim' &&
-      name.toLowerCase() === 'name' &&
-      email.toLowerCase().includes('email')
-    ) {
-      return;
+    // Detect if user pasted legacy NIM | NAME | EMAIL (i.e. parts[2] contains '@' and parts[1] does not)
+    if (parts.length >= 3 && !parts[1].includes('@') && parts[2].includes('@')) {
+      nim = parts[0];
+      name = parts[1];
+      email = parts[2];
+      if (parts[3]) {
+        const lower = parts[3].toLowerCase();
+        if (['passed', 'pass', 'true', '1', 'lolos'].includes(lower)) s1 = true;
+        else if (['failed', 'fail', 'false', '0', 'tidak lolos'].includes(lower)) s1 = false;
+      }
+      if (parts[4]) {
+        const lower = parts[4].toLowerCase();
+        if (['passed', 'pass', 'true', '1', 'lolos'].includes(lower)) s2 = true;
+        else if (['failed', 'fail', 'false', '0', 'tidak lolos'].includes(lower)) s2 = false;
+      }
+    } else {
+      // Standard format: NAME | EMAIL
+      name = parts[0];
+      email = parts[1];
+      if (parts[2]) {
+        const lower = parts[2].toLowerCase();
+        if (['passed', 'pass', 'true', '1', 'lolos'].includes(lower)) s1 = true;
+        else if (['failed', 'fail', 'false', '0', 'tidak lolos'].includes(lower)) s1 = false;
+      }
+      if (parts[3]) {
+        const lower = parts[3].toLowerCase();
+        if (['passed', 'pass', 'true', '1', 'lolos'].includes(lower)) s2 = true;
+        else if (['failed', 'fail', 'false', '0', 'tidak lolos'].includes(lower)) s2 = false;
+      }
     }
 
-    if (!nim) {
-      parseErrors.push({ line: lineNum, raw: trimmed, message: 'NIM is required' });
+    // Automatically skip header line if user included NAME | EMAIL or NIM | NAME | EMAIL
+    if (
+      (name.toLowerCase() === 'name' && email.toLowerCase().includes('email')) ||
+      (parts[0].toLowerCase() === 'nim' && parts[1]?.toLowerCase() === 'name')
+    ) {
       return;
     }
 
@@ -134,29 +161,22 @@ function parseBulkInput(
       return;
     }
 
-    // Optional status overrides if provided in columns 4 and 5
-    let s1 = defaultStatus1;
-    let s2 = defaultStatus2;
-    if (parts[3]) {
-      const lower = parts[3].toLowerCase();
-      if (['passed', 'pass', 'true', '1', 'lolos'].includes(lower)) s1 = true;
-      else if (['failed', 'fail', 'false', '0', 'tidak lolos'].includes(lower)) s1 = false;
-    }
-    if (parts[4]) {
-      const lower = parts[4].toLowerCase();
-      if (['passed', 'pass', 'true', '1', 'lolos'].includes(lower)) s2 = true;
-      else if (['failed', 'fail', 'false', '0', 'tidak lolos'].includes(lower)) s2 = false;
-    }
-
-    if (seenNims.has(nim)) {
-      const existingIdx = validApplicants.findIndex((a) => a.nim === nim);
+    const emailKey = email.toLowerCase();
+    if (seenEmails.has(emailKey)) {
+      const existingIdx = validApplicants.findIndex((a) => a.email.toLowerCase() === emailKey);
       if (existingIdx !== -1) {
-        validApplicants[existingIdx] = { nim, name, email, status_1: s1, status_2: s2 };
+        validApplicants[existingIdx] = {
+          nim: nim || validApplicants[existingIdx].nim,
+          name,
+          email,
+          status_1: s1,
+          status_2: s2,
+        };
       }
     } else {
-      seenNims.add(nim);
+      seenEmails.add(emailKey);
       validApplicants.push({
-        nim,
+        nim: nim || undefined,
         name,
         email,
         status_1: s1,
@@ -331,17 +351,17 @@ export default function BecomeAdmin() {
     setIsSaving(false);
   };
 
-  const sampleTemplate = `215150200111001 | Budi Santoso | budi@student.ub.ac.id
-215150200111002 | Siti Rahma | siti@student.ub.ac.id
-215150200111003 | Ahmad Fauzi | ahmad@student.ub.ac.id`;
+  const sampleTemplate = `Budi Santoso | budi@student.ub.ac.id
+Siti Rahma | siti@student.ub.ac.id
+Ahmad Fauzi | ahmad@student.ub.ac.id`;
 
   const handleInsertSample = () => {
     setBulkText(sampleTemplate);
   };
 
   const handleCopyTemplate = () => {
-    navigator.clipboard.writeText("NIM | NAME | EMAIL");
-    toast.success("Template copied: NIM | NAME | EMAIL");
+    navigator.clipboard.writeText("NAME | EMAIL");
+    toast.success("Template copied: NAME | EMAIL");
   };
 
   const handleDelete = async (id: string) => {
@@ -389,7 +409,7 @@ export default function BecomeAdmin() {
               className="flex items-center space-x-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl font-medium hover:bg-primary/90 transition-colors self-start sm:self-auto shadow-sm"
             >
               <Users className="w-4 h-4" />
-              <span>Bulk Input (NIM | NAME | EMAIL)</span>
+              <span>Bulk Input (NAME | EMAIL)</span>
             </button>
             <button
               onClick={() => handleOpenModal(null, 'single')}
@@ -514,7 +534,7 @@ export default function BecomeAdmin() {
                       filteredApplicants.map((applicant) => (
                         <tr key={applicant.id} className="hover:bg-muted/30 transition-colors">
                           <td className="px-6 py-4 font-medium text-foreground font-mono">
-                            {applicant.nim}
+                            {applicant.nim === applicant.email ? '-' : (applicant.nim || '-')}
                           </td>
                           <td className="px-6 py-4 font-semibold">
                             {applicant.name}
@@ -720,7 +740,7 @@ export default function BecomeAdmin() {
                   {formData.id
                     ? "Update details for this applicant."
                     : (modalMode === 'bulk'
-                        ? "Input multiple applicants using the template: NIM | NAME | EMAIL"
+                        ? "Input multiple applicants using the template: NAME | EMAIL"
                         : "Enter details for an individual applicant.")}
                 </p>
               </div>
@@ -765,11 +785,11 @@ export default function BecomeAdmin() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-xs uppercase font-bold tracking-wider text-primary">Input Template:</span>
                       <code className="px-2.5 py-0.5 rounded-md bg-primary/10 text-primary font-mono text-xs font-bold border border-primary/20">
-                        NIM | NAME | EMAIL
+                        NAME | EMAIL
                       </code>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      One applicant per line. Pipe (<code className="font-mono">|</code>) separated.
+                      One applicant per line. Pipe (<code className="font-mono">|</code>) or Tab separated.
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -836,7 +856,7 @@ export default function BecomeAdmin() {
                     rows={7}
                     value={bulkText}
                     onChange={(e) => setBulkText(e.target.value)}
-                    placeholder={"215150200111001 | Budi Santoso | budi@student.ub.ac.id\n215150200111002 | Siti Rahma | siti@student.ub.ac.id\n215150200111003 | Ahmad Fauzi | ahmad@student.ub.ac.id"}
+                    placeholder={"Budi Santoso | budi@student.ub.ac.id\nSiti Rahma | siti@student.ub.ac.id\nAhmad Fauzi | ahmad@student.ub.ac.id"}
                     className="w-full px-3.5 py-3 border border-border rounded-xl bg-muted/20 font-mono text-sm leading-relaxed focus:outline-none focus:ring-1 focus:ring-primary resize-y"
                   />
                 </div>
@@ -869,14 +889,13 @@ export default function BecomeAdmin() {
                         <Check className="w-3.5 h-3.5 text-green-500" />
                         Preview ({validApplicants.length} ready to save)
                       </span>
-                      <span>Existing NIMs will be updated</span>
+                      <span>Existing applicants will be updated</span>
                     </div>
                     <div className="max-h-44 overflow-y-auto border border-border rounded-xl overflow-hidden bg-card text-xs">
                       <table className="w-full text-left">
                         <thead className="bg-muted/60 text-muted-foreground text-[11px] uppercase font-mono sticky top-0">
                           <tr>
                             <th className="px-3 py-2">#</th>
-                            <th className="px-3 py-2">NIM</th>
                             <th className="px-3 py-2">Name</th>
                             <th className="px-3 py-2">Email</th>
                             <th className="px-3 py-2 text-center">Batch 1</th>
@@ -887,7 +906,6 @@ export default function BecomeAdmin() {
                           {validApplicants.map((app, idx) => (
                             <tr key={idx} className="hover:bg-muted/30">
                               <td className="px-3 py-1.5 text-muted-foreground font-mono">{idx + 1}</td>
-                              <td className="px-3 py-1.5 font-mono font-medium">{app.nim}</td>
                               <td className="px-3 py-1.5 font-medium">{app.name}</td>
                               <td className="px-3 py-1.5 text-muted-foreground">{app.email}</td>
                               <td className="px-3 py-1.5 text-center">
@@ -940,14 +958,13 @@ export default function BecomeAdmin() {
               /* Modal Body: Single Applicant Form */
               <form onSubmit={handleSave} className="p-6 space-y-4 overflow-y-auto flex-1">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">NIM</label>
+                  <label className="text-sm font-medium">NIM (Optional)</label>
                   <input
-                    required
                     type="text"
                     value={formData.nim}
                     onChange={(e) => setFormData({ ...formData, nim: e.target.value })}
                     className="w-full px-3 py-2 border border-border rounded-lg bg-transparent"
-                    placeholder="e.g. 215150200..."
+                    placeholder="e.g. 215150200... (Optional)"
                   />
                 </div>
                 

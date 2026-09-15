@@ -7,15 +7,19 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-export async function checkAnnouncementStatus(nim: string, email: string) {
+export async function checkAnnouncementStatus(emailOrNim: string, maybeEmail?: string) {
   try {
-    const cleanNim = nim.trim();
-    const cleanEmail = email.trim();
+    // If two arguments were passed (legacy nim, email), use the second arg as email
+    const emailToQuery = (maybeEmail && maybeEmail.trim()) ? maybeEmail : emailOrNim;
+    const cleanEmail = emailToQuery ? emailToQuery.trim() : '';
+
+    if (!cleanEmail) {
+      return { success: false, status: null, error: 'Email is required' };
+    }
 
     const { data, error } = await supabaseAdmin
       .from('become_applicants')
-      .select('name, status_1, status_2')
-      .eq('nim', cleanNim)
+      .select('name, nim, email, status_1, status_2')
       .ilike('email', cleanEmail)
       .maybeSingle();
 
@@ -34,3 +38,4 @@ export async function checkAnnouncementStatus(nim: string, email: string) {
     return { success: false, status: null };
   }
 }
+
