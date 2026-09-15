@@ -1,9 +1,26 @@
 import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import { DollarSign, ShoppingBag, BookOpen, Presentation, Users, FileCheck, UserCheck, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default async function AdminDashboard() {
   const supabase = await createClient();
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session) {
+    const { data: userData } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", session.user.id)
+      .single();
+
+    if (userData?.role === "ADMINBECOME") {
+      redirect("/admin/interview-schedule");
+    }
+  }
 
   const { data: transactions } = await supabase
     .from("transactions")

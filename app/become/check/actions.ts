@@ -9,12 +9,15 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function checkAnnouncementStatus(nim: string, email: string) {
   try {
+    const cleanNim = nim.trim();
+    const cleanEmail = email.trim();
+
     const { data, error } = await supabaseAdmin
       .from('become_applicants')
-      .select('status_1, status_2')
-      .eq('nim', nim)
-      .eq('email', email)
-      .single();
+      .select('name, status_1, status_2')
+      .eq('nim', cleanNim)
+      .ilike('email', cleanEmail)
+      .maybeSingle();
 
     if (error) {
       console.error('Error fetching applicant status:', error);

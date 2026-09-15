@@ -139,7 +139,7 @@ const FlipCard = ({ value, label }: { value: number; label: string }) => {
 };
 
 export default function BecomePage() {
-  const targetDate = useMemo(() => new Date("2026-09-07T23:59:59").getTime(), []);
+  const targetDate = useMemo(() => new Date("2026-09-24T23:59:59").getTime(), []);
 
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
@@ -153,7 +153,6 @@ export default function BecomePage() {
   useEffect(() => {
     setMounted(true);
 
-    // Cek apakah tanggal sekarang berada di antara 17 September dan 25 September 00:00
     const now = new Date();
     const currentYear = now.getFullYear();
     const startWriting = new Date(`${currentYear}-09-17T00:00:00`);
@@ -203,7 +202,7 @@ export default function BecomePage() {
     isActive: index === activeIndex,
   }));
 
-  const batch_1 = false;
+  const batch_1 = true;
   const batch_2 = false;
 
   let buttonText = 'Join Us!';
@@ -254,7 +253,7 @@ export default function BecomePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
                 {/* Col 1: Countdown */}
                 <div className="flex flex-col items-center md:items-start justify-center md:border-r border-white/10 pb-8 md:pb-0 md:pr-10 border-b md:border-b-0">
-                  <span className="text-xs tracking-[0.2em] uppercase font-bold text-[var(--color-primary)] mb-6 block text-center md:text-left w-full">Registration Closes In</span>
+                  <span className="text-xs tracking-[0.2em] uppercase font-bold text-[var(--color-primary)] mb-6 block text-center md:text-left w-full">Batch 1 Interview & Writing Test Close In</span>
                   <div className="grid grid-flow-col gap-2 lg:gap-3 text-center auto-cols-max">
                     <FlipCard value={mounted ? timeLeft.days : 0} label="days" />
                     <FlipCard value={mounted ? timeLeft.hours : 0} label="hours" />
@@ -266,8 +265,8 @@ export default function BecomePage() {
                 {/* Col 2: Text & Button */}
                 <div className="flex flex-col justify-center text-center md:text-left">
                   <p className="text-lg md:text-xl lg:text-xl text-white/70 font-light leading-relaxed mb-8">
-                    <strong className="text-white font-semibold">Join 180 Degrees Consulting Universitas Brawijaya</strong>
-                    <br></br>and make a tangible impact while developing your professional skills.
+                    <strong className="text-white font-semibold">Announcement Batch 1 is Out!</strong>
+                    <br></br>Check your result now by inputing your NIM and Email in the button below
                   </p>
 
                   <div className="flex justify-center md:justify-start">

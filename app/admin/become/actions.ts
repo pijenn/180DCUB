@@ -30,7 +30,7 @@ export async function saveApplicant(payload: any) {
   try {
     const { error } = await supabaseAdmin
       .from('become_applicants')
-      .upsert(payload);
+      .upsert(payload, { onConflict: payload.id ? 'id' : 'nim' });
 
     if (error) {
       return { success: false, error: error.message };
@@ -38,6 +38,41 @@ export async function saveApplicant(payload: any) {
 
     return { success: true };
   } catch (error: any) {
+    return { success: false, error: error.message || 'Unknown error' };
+  }
+}
+
+export async function saveMultipleApplicants(
+  applicants: {
+    nim: string;
+    name: string;
+    email: string;
+    status_1: boolean;
+    status_2: boolean;
+  }[]
+) {
+  try {
+    if (!applicants || applicants.length === 0) {
+      return { success: false, error: 'No applicant data provided' };
+    }
+
+    // Process in chunks of 200 to prevent payload size issues
+    const chunkSize = 200;
+    for (let i = 0; i < applicants.length; i += chunkSize) {
+      const chunk = applicants.slice(i, i + chunkSize);
+      const { error } = await supabaseAdmin
+        .from('become_applicants')
+        .upsert(chunk, { onConflict: 'nim' });
+
+      if (error) {
+        console.error('Error saving multiple applicants chunk:', error);
+        return { success: false, error: error.message };
+      }
+    }
+
+    return { success: true, count: applicants.length };
+  } catch (error: any) {
+    console.error('Unexpected error saving multiple applicants:', error);
     return { success: false, error: error.message || 'Unknown error' };
   }
 }

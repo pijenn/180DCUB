@@ -20,6 +20,7 @@ import {
   LogIn
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import TestReaderModal from './TestReaderModal';
 
 const DEPARTMENTS = [
   'Human Resources',
@@ -31,7 +32,7 @@ const DEPARTMENTS = [
 ];
 
 // 17 September to 25 September 00:00
-const START_DATE_STR = '2026-09-17T00:00:00+07:00';
+const START_DATE_STR = '2026-09-12T00:00:00+07:00';
 const END_DATE_STR = '2026-09-25T00:00:00+07:00';
 
 export default function WritingTestPage() {
@@ -51,6 +52,7 @@ export default function WritingTestPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isReaderOpen, setIsReaderOpen] = useState(false);
 
   // Date restriction calculation
   const [dateStatus, setDateStatus] = useState<'early' | 'open' | 'closed'>('open');
@@ -248,7 +250,14 @@ export default function WritingTestPage() {
             </p>
           </div>
 
-
+          <button
+            type="button"
+            onClick={() => setIsReaderOpen(true)}
+            className="shrink-0 inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-full bg-[var(--color-primary)] text-black font-extrabold text-sm sm:text-base hover:bg-white transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_25px_rgba(140,198,63,0.35)] cursor-pointer"
+          >
+            <FileText className="w-4 h-4" />
+            <span>Read The Test</span>
+          </button>
         </div>
 
         {/* Authentication Wall Check */}
@@ -390,9 +399,19 @@ export default function WritingTestPage() {
 
               {/* Department */}
               <div className="space-y-2">
-                <label htmlFor="department" className="text-sm font-bold text-white uppercase tracking-wider block">
-                  Department <span className="text-[var(--color-primary)]">*</span>
-                </label>
+                <div className="flex justify-between items-center">
+                  <label htmlFor="department" className="text-sm font-bold text-white uppercase tracking-wider block">
+                    Department <span className="text-[var(--color-primary)]">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setIsReaderOpen(true)}
+                    className="text-xs text-[var(--color-primary)] hover:underline inline-flex items-center gap-1 font-medium cursor-pointer"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>Read The Test</span>
+                  </button>
+                </div>
                 <select
                   id="department"
                   required
@@ -458,6 +477,15 @@ export default function WritingTestPage() {
         )}
 
       </div>
+      
+      {/* Writing Test Reader Modal */}
+      <TestReaderModal
+        isOpen={isReaderOpen}
+        onClose={() => setIsReaderOpen(false)}
+        userEmail={user?.email}
+        userName={formData.name || user?.user_metadata?.full_name}
+        defaultDepartment={formData.department}
+      />
     </div>
   );
 }

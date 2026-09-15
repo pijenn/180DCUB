@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Package, Ticket, CalendarClock, LogOut, Receipt, FileText, FileDigit, Users, FileCheck } from "lucide-react";
+import { LayoutDashboard, Package, Ticket, CalendarClock, LogOut, Receipt, FileText, FileDigit, Users, FileCheck, CalendarCheck2 } from "lucide-react";
 
 export default async function AdminLayout({
   children,
@@ -26,13 +26,17 @@ export default async function AdminLayout({
     .eq("id", session.user.id)
     .single();
 
-  if (error || userData?.role !== "ADMIN") {
-    // If error or not admin, kick them out
+  const userRole = userData?.role;
+  if (error || (userRole !== "ADMIN" && userRole !== "ADMINBECOME")) {
+    // If error or not authorized admin role, kick them out
     redirect("/");
   }
 
-  const navItems = [
+  const isOnlyAdminBecome = userRole === "ADMINBECOME";
+
+  const allNavItems = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    { name: "Interview Schedule", href: "/admin/interview-schedule", icon: CalendarCheck2 },
     { name: "Become 180", href: "/admin/become", icon: Users },
     { name: "Writing Tests", href: "/admin/writing-tests", icon: FileCheck },
     { name: "Products", href: "/admin/products", icon: Package },
@@ -42,6 +46,10 @@ export default async function AdminLayout({
     { name: "Mentoring Invoices", href: "/admin/mentoring-invoices", icon: FileDigit },
     { name: "Articles", href: "/admin/articles", icon: FileText },
   ];
+
+  const navItems = isOnlyAdminBecome
+    ? [{ name: "Interview Schedule", href: "/admin/interview-schedule", icon: CalendarCheck2 }]
+    : allNavItems;
 
   return (
     <div className="min-h-screen bg-muted/20 flex flex-col md:flex-row pt-16">
