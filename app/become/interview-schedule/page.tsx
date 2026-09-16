@@ -31,8 +31,9 @@ import {
   DEPARTMENTS, 
   INTERVIEW_DATES, 
   TIME_SLOTS, 
+  DepartmentConfig,
   generateWhatsAppLink,
-  type DepartmentConfig 
+  isBodBomDivision
 } from "@/lib/interviewConstants";
 import { 
   verifyCandidateEligibility, 
@@ -716,6 +717,13 @@ function InterviewScheduleContent() {
                           <>
                             <div className={isSelected ? "font-bold text-black" : "font-medium text-emerald-400 group-hover:text-white"}>
                               Interviewer: {targetSlot.panelist?.name || "Assigned"}
+                              {isBodBomDivision(targetSlot.panelist?.division) && (
+                                <span className={`ml-1.5 px-1 py-0.2 rounded text-[9px] font-bold ${
+                                  isSelected ? "bg-black/20 text-black" : "bg-amber-400/20 text-amber-300 border border-amber-400/30"
+                                }`}>
+                                  BoD/BoM
+                                </span>
+                              )}
                             </div>
                             <div className={isSelected ? "text-black/70 text-[10px]" : "text-white/40 text-[10px]"}>
                               {matchingSlots.length} panel available
@@ -729,6 +737,50 @@ function InterviewScheduleContent() {
                   );
                 })}
               </div>
+            )}
+
+            {/* Multiple Interviewers Picker for selected time */}
+            {selectedSlot && (
+              (() => {
+                const matching = dateSlots.filter((s) => s.start_time === selectedSlot.start_time);
+                if (matching.length <= 1) return null;
+                return (
+                  <div className="mb-6 p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="text-xs text-white/70">
+                      <span className="font-bold text-white">{matching.length} Interviewers</span> available at {selectedSlot.start_time}:
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {matching.map((slot) => {
+                        const isChosen = selectedSlot.id === slot.id;
+                        const isBod = isBodBomDivision(slot.panelist?.division);
+                        return (
+                          <button
+                            key={slot.id}
+                            type="button"
+                            onClick={() => setSelectedSlot(slot)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                              isChosen
+                                ? "bg-[var(--color-primary)] text-black shadow-[0_0_15px_rgba(140,198,63,0.4)] scale-105"
+                                : "bg-black/40 text-white/80 hover:bg-white/10 hover:text-white border border-white/15"
+                            }`}
+                          >
+                            <span>{slot.panelist?.name}</span>
+                            {isBod ? (
+                              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                isChosen ? "bg-black/20 text-black" : "bg-amber-400/20 text-amber-300"
+                              }`}>
+                                BoD/BoM
+                              </span>
+                            ) : slot.panelist?.division ? (
+                              <span className="opacity-60 text-[10px]">({slot.panelist.division})</span>
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()
             )}
 
             {/* Bottom Summary Bar & Action Button */}
@@ -746,6 +798,11 @@ function InterviewScheduleContent() {
                       {selectedSlot.slot_date} at {selectedSlot.start_time} - {selectedSlot.end_time}
                       <span className="text-[var(--color-primary)] font-normal ml-2">
                         with {selectedSlot.panelist?.name}
+                        {isBodBomDivision(selectedSlot.panelist?.division) && (
+                          <span className="ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                            BoD/BoM
+                          </span>
+                        )}
                       </span>
                     </p>
                   ) : (
@@ -836,8 +893,13 @@ function InterviewScheduleContent() {
                 </div>
                 <div className="col-span-2 pt-2 border-t border-white/10">
                   <span className="text-white/40 block text-[11px]">Interviewer (Panelist):</span>
-                  <span className="font-bold text-white text-sm">
-                    {existingBooking.panelist?.name}
+                  <span className="font-bold text-white text-sm flex items-center gap-2">
+                    <span>{existingBooking.panelist?.name}</span>
+                    {isBodBomDivision(existingBooking.panelist?.division) && (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                        BoD/BoM
+                      </span>
+                    )}
                   </span>
                 </div>
               </div>
@@ -928,9 +990,16 @@ function InterviewScheduleContent() {
                     <span className="font-medium text-[var(--color-primary)]">{selectedDivision}</span>
                   </div>
                 )}
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="text-white/50">Interviewer:</span>
-                  <span className="font-semibold text-white">{selectedSlot.panelist?.name}</span>
+                  <span className="font-semibold text-white flex items-center gap-1.5">
+                    <span>{selectedSlot.panelist?.name}</span>
+                    {isBodBomDivision(selectedSlot.panelist?.division) && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                        BoD/BoM
+                      </span>
+                    )}
+                  </span>
                 </div>
                 <div className="flex justify-between border-t border-white/10 pt-2 font-mono">
                   <span className="text-white/50">Schedule:</span>

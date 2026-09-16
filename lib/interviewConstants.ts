@@ -6,6 +6,30 @@ export interface DepartmentConfig {
   divisions: string[];
 }
 
+export const BOD_BOM_DIVISION = 'BoD/BoM';
+
+/**
+ * Helper to check if a division string represents BoD/BoM
+ */
+export function isBodBomDivision(division?: string | null): boolean {
+  if (!division) return false;
+  const clean = division.trim().toLowerCase();
+  return clean === 'bod/bom' || clean === 'bod / bom' || clean === 'bod-bom';
+}
+
+/**
+ * Returns available sub-division options for admin panelist creation & editing.
+ * Departments with sub-divisions get: [...divisions, 'BoD/BoM']
+ * Departments without sub-divisions (HR, Consulting) get: ['General', 'BoD/BoM']
+ */
+export function getAdminDivisionsForDepartment(departmentName: string): string[] {
+  const dept = DEPARTMENTS.find((d) => d.name === departmentName);
+  if (!dept || dept.divisions.length === 0) {
+    return ['General', BOD_BOM_DIVISION];
+  }
+  return [...dept.divisions, BOD_BOM_DIVISION];
+}
+
 export const DEPARTMENTS: DepartmentConfig[] = [
   {
     id: 'hr',

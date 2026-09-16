@@ -6,6 +6,7 @@ import {
   Users, 
   Plus, 
   Trash2, 
+  Edit2,
   Search, 
   Filter, 
   ExternalLink, 
@@ -20,7 +21,8 @@ import {
   Download,
   Building2,
   Layers,
-  ChevronRight
+  ChevronRight,
+  Lock
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { 
@@ -28,11 +30,16 @@ import {
   INTERVIEW_DATES, 
   TIME_SLOTS, 
   normalizePhoneNumber, 
-  generateWhatsAppLink 
+  generateWhatsAppLink,
+  getAdminDivisionsForDepartment,
+  isBodBomDivision,
+  BOD_BOM_DIVISION
 } from "@/lib/interviewConstants";
 import { 
   fetchPanelists, 
   createPanelistWithSlots, 
+  updatePanelistWithSlots,
+  fetchPanelistSlots,
   deletePanelist, 
   fetchBookedInterviews, 
   adminCancelBooking,
@@ -65,14 +72,32 @@ export default function AdminInterviewSchedulePage() {
   const [currentDateTab, setCurrentDateTab] = useState(INTERVIEW_DATES[0].dateStr);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
+  // Modal: Edit Panelist
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingPanelist, setEditingPanelist] = useState<any | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDepartment, setEditDepartment] = useState(DEPARTMENTS[0].name);
+  const [editDivision, setEditDivision] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editSelectedSlots, setEditSelectedSlots] = useState<Record<string, Set<string>>>({});
+  const [editBookedSlotKeys, setEditBookedSlotKeys] = useState<Record<string, { nim: string; name: string; email: string }>>({});
+  const [editCurrentDateTab, setEditCurrentDateTab] = useState(INTERVIEW_DATES[0].dateStr);
+  const [editLoadingSlots, setEditLoadingSlots] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+
   // Modal: Cancel Booking
   const [cancelModalBooking, setCancelModalBooking] = useState<any | null>(null);
   const [cancelling, setCancelling] = useState(false);
 
-  // Available divisions for currently selected department
-  const currentDeptConfig = useMemo(() => {
-    return DEPARTMENTS.find((d) => d.name === department) || DEPARTMENTS[0];
+  // Available divisions for Add Panelist
+  const availableAddDivisions = useMemo(() => {
+    return getAdminDivisionsForDepartment(department);
   }, [department]);
+
+  // Available divisions for Edit Panelist
+  const availableEditDivisions = useMemo(() => {
+    return getAdminDivisionsForDepartment(editDepartment);
+  }, [editDepartment]);
 
   // Load data
   const loadData = async () => {
@@ -115,7 +140,8 @@ export default function AdminInterviewSchedulePage() {
   const handleOpenAddModal = () => {
     setName("");
     setDepartment(DEPARTMENTS[0].name);
-    setDivision(DEPARTMENTS[0].divisions[0] || "");
+    const divs = getAdminDivisionsForDepartment(DEPARTMENTS[0].name);
+    setDivision(divs[0] || "General");
     setPhone("62");
     // initialize empty slots map
     const initialSlots: Record<string, Set<string>> = {};
@@ -218,7 +244,7 @@ export default function AdminInterviewSchedulePage() {
       const payload: PanelistPayload = {
         name: name.trim(),
         department,
-        division: currentDeptConfig.divisions.length > 0 ? division : null,
+        division: division && division !== "General" ? division.trim() : null,
         phone_number: phone,
       };
 
@@ -235,6 +261,175 @@ export default function AdminInterviewSchedulePage() {
       toast.error(err.message || "An unexpected error occurred");
     } finally {
       setSavingPanelist(false);
+    }
+  };
+
+  // Open Edit Modal & Load Existing Slots
+  const handleOpenEditModal = async (panelist: any) => {
+    setEditingPanelist(panelist);
+    setEditName(panelist.name);
+    setEditDepartment(panelist.department);
+    const divs = getAdminDivisionsForDepartment(panelist.department);
+    setEditDivision(panelist.division || divs[0] || "General");
+    setEditPhone(panelist.phone_number);
+    setEditCurrentDateTab(INTERVIEW_DATES[0].dateStr);
+    setIsEditModalOpen(true);
+    setEditLoadingSlots(true);
+
+    const initialSlots: Record<string, Set<string>> = {};
+    INTERVIEW_DATES.forEach((d) => {
+      initialSlots[d.dateStr] = new Set();
+    });
+    const bookedMap: Record<string, { nim: string; name: string; email: string }> = {};
+
+    try {
+      const res = await fetchPanelistSlots(panelist.id);
+      if (res.success && res.data) {
+        res.data.forEach((slot: any) => {
+          const config = TIME_SLOTS.find((ts) => ts.startTime === slot.start_time);
+          const slotId = config ? config.id : `${slot.start_time}-${slot.end_time}`;
+          if (!initialSlots[slot.slot_date]) {
+            initialSlots[slot.slot_date] = new Set();
+          }
+          initialSlots[slot.slot_date].add(slotId);
+
+          if (slot.is_booked) {
+            bookedMap[`${slot.slot_date}_${slotId}`] = {
+              nim: slot.booked_by_nim || "-",
+              name: slot.booked_by_name || "Candidate",
+              email: slot.booked_by_email || "-",
+            };
+          }
+        });
+      }
+    } catch (err: any) {
+      toast.error("Failed to load panelist slots");
+    } finally {
+      setEditSelectedSlots(initialSlots);
+      setEditBookedSlotKeys(bookedMap);
+      setEditLoadingSlots(false);
+    }
+  };
+
+  // Toggle slot in Edit Modal (locks booked slots)
+  const handleToggleEditSlot = (dateStr: string, slotId: string) => {
+    const key = `${dateStr}_${slotId}`;
+    if (editBookedSlotKeys[key]) {
+      const b = editBookedSlotKeys[key];
+      toast.error(`Slot is booked by ${b.name} (${b.nim}). To remove this slot, cancel the booking first in the Bookings tab.`);
+      return;
+    }
+
+    setEditSelectedSlots((prev) => {
+      const updated = { ...prev };
+      const dateSet = new Set(updated[dateStr] || []);
+      if (dateSet.has(slotId)) {
+        dateSet.delete(slotId);
+      } else {
+        dateSet.add(slotId);
+      }
+      updated[dateStr] = dateSet;
+      return updated;
+    });
+  };
+
+  const handleEditSelectAllDay = (dateStr: string) => {
+    setEditSelectedSlots((prev) => {
+      const updated = { ...prev };
+      updated[dateStr] = new Set(TIME_SLOTS.map((s) => s.id));
+      return updated;
+    });
+  };
+
+  const handleEditClearDay = (dateStr: string) => {
+    setEditSelectedSlots((prev) => {
+      const updated = { ...prev };
+      // Preserve any booked slots on this day
+      const preservedSet = new Set<string>();
+      (updated[dateStr] || []).forEach((slotId) => {
+        if (editBookedSlotKeys[`${dateStr}_${slotId}`]) {
+          preservedSet.add(slotId);
+        }
+      });
+      updated[dateStr] = preservedSet;
+      return updated;
+    });
+  };
+
+  const handleEditSelectRange = (dateStr: string, startIdx: number, endIdx: number) => {
+    setEditSelectedSlots((prev) => {
+      const updated = { ...prev };
+      const dateSet = new Set(updated[dateStr] || []);
+      TIME_SLOTS.slice(startIdx, endIdx).forEach((s) => dateSet.add(s.id));
+      updated[dateStr] = dateSet;
+      return updated;
+    });
+  };
+
+  const totalEditSlotsCount = useMemo(() => {
+    let count = 0;
+    Object.values(editSelectedSlots).forEach((set) => {
+      count += set.size;
+    });
+    return count;
+  }, [editSelectedSlots]);
+
+  const totalEditBookedCount = useMemo(() => {
+    return Object.keys(editBookedSlotKeys).length;
+  }, [editBookedSlotKeys]);
+
+  const handleSaveEditPanelist = async () => {
+    if (!editingPanelist) return;
+    if (!editName.trim()) {
+      toast.error("Please enter panelist name");
+      return;
+    }
+    const cleanPhone = normalizePhoneNumber(editPhone);
+    if (!cleanPhone.startsWith("62") || cleanPhone.length < 10) {
+      toast.error("Phone number must start with 62 (e.g. 628123456789)");
+      return;
+    }
+    if (totalEditSlotsCount === 0) {
+      toast.error("Please select at least one available interview slot");
+      return;
+    }
+
+    setEditSaving(true);
+    try {
+      const slotsPayload: SlotPayload[] = [];
+      Object.entries(editSelectedSlots).forEach(([dateStr, slotSet]) => {
+        slotSet.forEach((slotId) => {
+          const config = TIME_SLOTS.find((s) => s.id === slotId);
+          if (config) {
+            slotsPayload.push({
+              slot_date: dateStr,
+              start_time: config.startTime,
+              end_time: config.endTime,
+            });
+          }
+        });
+      });
+
+      const payload: PanelistPayload = {
+        name: editName.trim(),
+        department: editDepartment,
+        division: editDivision && editDivision !== "General" ? editDivision.trim() : null,
+        phone_number: cleanPhone,
+      };
+
+      const res = await updatePanelistWithSlots(editingPanelist.id, payload, slotsPayload);
+      if (res.success) {
+        toast.success(`Panelist ${payload.name} updated successfully!`);
+        setIsEditModalOpen(false);
+        setEditingPanelist(null);
+        loadData();
+      } else {
+        toast.error(res.error || "Failed to update panelist");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "An unexpected error occurred");
+    } finally {
+      setEditSaving(false);
     }
   };
 
@@ -448,24 +643,39 @@ export default function AdminInterviewSchedulePage() {
                       <div className="flex items-start justify-between gap-2 mb-3">
                         <div>
                           <h3 className="font-bold text-foreground text-lg">{panelist.name}</h3>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                          <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
                             <span className="font-medium text-foreground/80">{panelist.department}</span>
                             {panelist.division && (
                               <>
                                 <span>•</span>
-                                <span className="text-primary font-medium">{panelist.division}</span>
+                                {isBodBomDivision(panelist.division) ? (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                                    BoD/BoM (Cross-subdivision)
+                                  </span>
+                                ) : (
+                                  <span className="text-primary font-medium">{panelist.division}</span>
+                                )}
                               </>
                             )}
                           </div>
                         </div>
 
-                        <button
-                          onClick={() => handleDeletePanelist(panelist)}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                          title="Delete Panelist"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleOpenEditModal(panelist)}
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                            title="Edit Panelist & Schedule"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeletePanelist(panelist)}
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                            title="Delete Panelist"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
 
                       <div className="space-y-2 py-3 border-y border-border/60 text-xs">
@@ -750,8 +960,8 @@ export default function AdminInterviewSchedulePage() {
                     onChange={(e) => {
                       const newDept = e.target.value;
                       setDepartment(newDept);
-                      const cfg = DEPARTMENTS.find((d) => d.name === newDept);
-                      setDivision(cfg?.divisions[0] || "");
+                      const divs = getAdminDivisionsForDepartment(newDept);
+                      setDivision(divs[0] || "General");
                     }}
                     className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary transition-all"
                   >
@@ -765,27 +975,23 @@ export default function AdminInterviewSchedulePage() {
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
-                    Division {currentDeptConfig.divisions.length === 0 ? "(None)" : "*"}
+                    Sub-Division / Track *
                   </label>
-                  {currentDeptConfig.divisions.length > 0 ? (
-                    <select
-                      value={division}
-                      onChange={(e) => setDivision(e.target.value)}
-                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary transition-all"
-                    >
-                      {currentDeptConfig.divisions.map((div) => (
-                        <option key={div} value={div}>
-                          {div}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      disabled
-                      value="General (No sub-division)"
-                      className="w-full bg-muted/40 border border-border rounded-xl px-4 py-2.5 text-sm text-muted-foreground cursor-not-allowed"
-                    />
+                  <select
+                    value={division}
+                    onChange={(e) => setDivision(e.target.value)}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary transition-all"
+                  >
+                    {availableAddDivisions.map((div) => (
+                      <option key={div} value={div}>
+                        {div} {isBodBomDivision(div) ? "(Can interview all subdivisions)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                  {isBodBomDivision(division) && (
+                    <p className="text-[11px] text-amber-500 mt-1.5 flex items-center gap-1 font-medium">
+                      ⭐ BoD/BoM: Can interview candidates from all subdivisions in this department.
+                    </p>
                   )}
                 </div>
               </div>
@@ -926,6 +1132,303 @@ export default function AdminInterviewSchedulePage() {
                   className="px-5 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-md shadow-primary/20"
                 >
                   Review & Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: EDIT PANELIST & SCHEDULE */}
+      {isEditModalOpen && editingPanelist && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="bg-card border border-border rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-border flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                  <Edit2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-foreground">Edit Panelist & Schedule</h2>
+                  <p className="text-xs text-muted-foreground">
+                    Update profile information, change sub-division, or edit schedule slots.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1">
+              {editLoadingSlots ? (
+                <div className="py-24 text-center text-muted-foreground flex flex-col items-center gap-3">
+                  <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+                  <p className="text-sm font-medium">Loading panelist schedule & slots...</p>
+                </div>
+              ) : (
+                <>
+                  {/* Personal Info Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+                        Panelist Full Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder="e.g. Jane Doe"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+                        WhatsApp Phone Number (Must start with 62) *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={editPhone}
+                          onChange={(e) => {
+                            let val = e.target.value.replace(/[^0-9]/g, "");
+                            setEditPhone(val);
+                          }}
+                          placeholder="628123456789"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground font-mono focus:outline-none focus:border-primary transition-all"
+                        />
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        Format: digits only, starting with 62 (e.g. 62812345678)
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+                        Department *
+                      </label>
+                      <select
+                        value={editDepartment}
+                        onChange={(e) => {
+                          const newDept = e.target.value;
+                          setEditDepartment(newDept);
+                          const divs = getAdminDivisionsForDepartment(newDept);
+                          setEditDivision(divs[0] || "General");
+                        }}
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary transition-all"
+                      >
+                        {DEPARTMENTS.map((d) => (
+                          <option key={d.id} value={d.name}>
+                            {d.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+                        Sub-Division / Track *
+                      </label>
+                      <select
+                        value={editDivision}
+                        onChange={(e) => setEditDivision(e.target.value)}
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary transition-all"
+                      >
+                        {availableEditDivisions.map((div) => (
+                          <option key={div} value={div}>
+                            {div} {isBodBomDivision(div) ? "(Can interview all subdivisions)" : ""}
+                          </option>
+                        ))}
+                      </select>
+                      {isBodBomDivision(editDivision) && (
+                        <p className="text-[11px] text-amber-500 mt-1.5 flex items-center gap-1 font-medium">
+                          ⭐ BoD/BoM: Can interview candidates from all subdivisions in this department.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Availability Grid */}
+                  <div className="pt-4 border-t border-border">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-3">
+                      <div>
+                        <h3 className="text-sm font-bold text-foreground">Manage Interview Slots</h3>
+                        <p className="text-xs text-muted-foreground">
+                          Toggle unbooked slots. Booked candidate slots are locked to prevent breaking confirmed appointments.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs">
+                        <span className="font-mono text-muted-foreground">
+                          Total: <strong className="text-foreground">{totalEditSlotsCount}</strong>
+                        </span>
+                        <span className="font-mono text-emerald-500">
+                          Booked: <strong>{totalEditBookedCount}</strong>
+                        </span>
+                        <span className="font-mono text-primary">
+                          Open: <strong>{totalEditSlotsCount - totalEditBookedCount}</strong>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Date Tabs */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-border/80">
+                      {INTERVIEW_DATES.map((dateObj) => {
+                        const countForDate = editSelectedSlots[dateObj.dateStr]?.size || 0;
+                        const isCurrent = editCurrentDateTab === dateObj.dateStr;
+                        return (
+                          <button
+                            key={dateObj.dateStr}
+                            type="button"
+                            onClick={() => setEditCurrentDateTab(dateObj.dateStr)}
+                            className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-2 ${
+                              isCurrent
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            <span>{dateObj.dayLabel}, {dateObj.formattedLabel}</span>
+                            <span
+                              className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                                isCurrent
+                                  ? "bg-black/20 text-white font-bold"
+                                  : countForDate > 0
+                                  ? "bg-primary/20 text-primary"
+                                  : "bg-muted-foreground/20 text-muted-foreground"
+                              }`}
+                            >
+                              {countForDate}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Quick Shortcuts for Current Date */}
+                    <div className="flex flex-wrap items-center gap-2 my-3">
+                      <span className="text-xs text-muted-foreground mr-1">Quick:</span>
+                      <button
+                        type="button"
+                        onClick={() => handleEditSelectAllDay(editCurrentDateTab)}
+                        className="px-2.5 py-1 rounded-lg text-xs bg-muted hover:bg-muted/80 text-foreground transition-colors"
+                      >
+                        Select All Day (12 slots)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleEditSelectRange(editCurrentDateTab, 0, 4)}
+                        className="px-2.5 py-1 rounded-lg text-xs bg-muted hover:bg-muted/80 text-foreground transition-colors"
+                      >
+                        Morning (08:00 - 12:00)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleEditSelectRange(editCurrentDateTab, 5, 9)}
+                        className="px-2.5 py-1 rounded-lg text-xs bg-muted hover:bg-muted/80 text-foreground transition-colors"
+                      >
+                        Afternoon (13:00 - 17:00)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleEditSelectRange(editCurrentDateTab, 9, 12)}
+                        className="px-2.5 py-1 rounded-lg text-xs bg-muted hover:bg-muted/80 text-foreground transition-colors"
+                      >
+                        Evening (17:00 - 20:00)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleEditClearDay(editCurrentDateTab)}
+                        className="px-2.5 py-1 rounded-lg text-xs text-destructive hover:bg-destructive/10 transition-colors ml-auto"
+                      >
+                        Clear Unbooked
+                      </button>
+                    </div>
+
+                    {/* Time Slots Matrix */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                      {TIME_SLOTS.map((slot) => {
+                        const isSelected = editSelectedSlots[editCurrentDateTab]?.has(slot.id);
+                        const bookedInfo = editBookedSlotKeys[`${editCurrentDateTab}_${slot.id}`];
+
+                        return (
+                          <button
+                            key={slot.id}
+                            type="button"
+                            onClick={() => handleToggleEditSlot(editCurrentDateTab, slot.id)}
+                            className={`p-3 rounded-xl text-xs font-semibold font-mono flex flex-col justify-between border transition-all text-left min-h-[64px] ${
+                              bookedInfo
+                                ? "bg-emerald-950/20 border-emerald-500/60 text-emerald-400 cursor-not-allowed shadow-sm"
+                                : isSelected
+                                ? "bg-primary/20 border-primary text-primary shadow-sm cursor-pointer"
+                                : "bg-background border-border text-muted-foreground hover:text-foreground hover:border-border/80 cursor-pointer"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between w-full">
+                              <span>{slot.label}</span>
+                              {bookedInfo ? (
+                                <Lock className="w-3.5 h-3.5 text-emerald-400" />
+                              ) : isSelected ? (
+                                <Check className="w-3.5 h-3.5 text-primary" />
+                              ) : null}
+                            </div>
+                            {bookedInfo ? (
+                              <span className="text-[10px] text-emerald-400/90 font-sans font-normal truncate mt-1">
+                                Booked: {bookedInfo.name}
+                              </span>
+                            ) : isSelected ? (
+                              <span className="text-[10px] text-primary/80 font-sans font-normal mt-1">
+                                Available Slot
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground/60 font-sans font-normal mt-1">
+                                Not assigned
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/20">
+              <div className="text-xs text-muted-foreground">
+                Total assigned: <strong className="text-foreground">{totalEditSlotsCount}</strong> slots (
+                <span className="text-emerald-500 font-medium">{totalEditBookedCount} booked</span>,{" "}
+                <span className="text-primary font-medium">{totalEditSlotsCount - totalEditBookedCount} open</span>)
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  disabled={editSaving}
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={editSaving || editLoadingSlots}
+                  onClick={handleSaveEditPanelist}
+                  className="px-5 py-2 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-all shadow-md shadow-primary/20 flex items-center gap-2 disabled:opacity-50"
+                >
+                  {editSaving ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Saving Changes...</span>
+                    </>
+                  ) : (
+                    <span>Save Changes</span>
+                  )}
                 </button>
               </div>
             </div>

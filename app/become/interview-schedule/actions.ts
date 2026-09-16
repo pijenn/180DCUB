@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { isBodBomDivision } from '@/lib/interviewConstants';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -92,17 +93,11 @@ export async function verifyCandidateEligibility(nim: string, email: string) {
  */
 export async function fetchAvailableSlots(department: string, division?: string | null) {
   try {
-    // 1. Find all panelists for this department (& division if provided)
-    let panelistQuery = supabaseAdmin
+    // 1. Find all panelists for this department (or cross-department)
+    const { data: panelists, error: panelistError } = await supabaseAdmin
       .from('interview_panelists')
       .select('id, name, department, division, phone_number')
-      .eq('department', department);
-
-    if (division && division.trim()) {
-      panelistQuery = panelistQuery.eq('division', division.trim());
-    }
-
-    const { data: panelists, error: panelistError } = await panelistQuery;
+      .or(`department.eq."${department}",department.eq."All Departments",department.eq."ALL"`);
 
     if (panelistError) {
       console.error('Error fetching panelists:', panelistError);
@@ -110,6 +105,23 @@ export async function fetchAvailableSlots(department: string, division?: string 
     }
 
     if (!panelists || panelists.length === 0) {
+      return { success: true, data: [] };
+    }
+
+    const cleanDiv = (division || '').trim().toLowerCase();
+    const filteredPanelists = panelists.filter((p) => {
+      // If no specific division was specified (e.g. HR or Consulting general), show all panelists for that department
+      if (!cleanDiv || cleanDiv === 'general') return true;
+
+      const pDiv = (p.division || '').trim().toLowerCase();
+      // BoD/BoM panelists can interview candidates across ALL subdivisions in this department!
+      if (isBodBomDivision(p.division)) return true;
+
+      // Exact match with chosen division
+      return pDiv === cleanDiv;
+    });
+
+    if (filteredPanelists.length === 0) {
       return { success: true, data: [] };
     }
 

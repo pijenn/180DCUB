@@ -169,6 +169,132 @@ export async function fetchPanelistSlots(panelistId: string) {
 }
 
 /**
+ * Update an existing panelist's profile data (name, department, division, phone)
+ * and update their available slots (preserving any already-booked candidate slots).
+ */
+export async function updatePanelistWithSlots(
+  panelistId: string,
+  panelist: PanelistPayload,
+  desiredSlots: SlotPayload[]
+) {
+  try {
+    if (!panelistId) {
+      return { success: false, error: 'Panelist ID is required' };
+    }
+    if (!panelist.name.trim()) {
+      return { success: false, error: 'Panelist name is required' };
+    }
+    if (!panelist.department.trim()) {
+      return { success: false, error: 'Department is required' };
+    }
+
+    const cleanPhone = normalizePhoneNumber(panelist.phone_number);
+    if (!cleanPhone.startsWith('62') || cleanPhone.length < 10) {
+      return {
+        success: false,
+        error: 'Phone number must start with 62 (e.g., 628123456789) and have at least 10 digits',
+      };
+    }
+
+    // 1. Fetch current existing slots for this panelist
+    const { data: existingSlots, error: fetchSlotsErr } = await supabaseAdmin
+      .from('interview_slots')
+      .select('*')
+      .eq('panelist_id', panelistId);
+
+    if (fetchSlotsErr) {
+      return { success: false, error: 'Failed to fetch existing panelist slots' };
+    }
+
+    const currentSlots = existingSlots || [];
+    const bookedSlots = currentSlots.filter((s) => s.is_booked);
+
+    // If total slots requested + booked slots = 0
+    if (desiredSlots.length === 0 && bookedSlots.length === 0) {
+      return {
+        success: false,
+        error: 'Please select at least one available time slot for this panelist',
+      };
+    }
+
+    // 2. Update panelist information
+    const { error: panelistUpdateErr } = await supabaseAdmin
+      .from('interview_panelists')
+      .update({
+        name: panelist.name.trim(),
+        department: panelist.department.trim(),
+        division: panelist.division?.trim() || null,
+        phone_number: cleanPhone,
+      })
+      .eq('id', panelistId);
+
+    if (panelistUpdateErr) {
+      console.error('Error updating panelist:', panelistUpdateErr);
+      return { success: false, error: panelistUpdateErr.message };
+    }
+
+    // 3. Reconcile slots
+    // Set of keys for desired slots: "YYYY-MM-DD_HH:mm"
+    const desiredKeySet = new Set(
+      desiredSlots.map((s) => `${s.slot_date}_${s.start_time}`)
+    );
+
+    // Existing slot keys:
+    const existingKeySet = new Set(
+      currentSlots.map((s) => `${s.slot_date}_${s.start_time}`)
+    );
+
+    // Slots to DELETE: Existing unbooked slots that are NOT in desired slots
+    // Note: NEVER delete booked slots!
+    const slotsToDelete = currentSlots.filter(
+      (s) => !s.is_booked && !desiredKeySet.has(`${s.slot_date}_${s.start_time}`)
+    );
+
+    if (slotsToDelete.length > 0) {
+      const idsToDelete = slotsToDelete.map((s) => s.id);
+      const { error: deleteErr } = await supabaseAdmin
+        .from('interview_slots')
+        .delete()
+        .in('id', idsToDelete);
+
+      if (deleteErr) {
+        console.error('Error deleting unselected slots:', deleteErr);
+        return { success: false, error: 'Failed to remove old slots: ' + deleteErr.message };
+      }
+    }
+
+    // Slots to INSERT: Desired slots that are NOT already in current slots
+    const slotsToInsert = desiredSlots.filter(
+      (s) => !existingKeySet.has(`${s.slot_date}_${s.start_time}`)
+    );
+
+    if (slotsToInsert.length > 0) {
+      const recordsToInsert = slotsToInsert.map((s) => ({
+        panelist_id: panelistId,
+        slot_date: s.slot_date,
+        start_time: s.start_time,
+        end_time: s.end_time,
+        is_booked: false,
+      }));
+
+      const { error: insertErr } = await supabaseAdmin
+        .from('interview_slots')
+        .insert(recordsToInsert);
+
+      if (insertErr) {
+        console.error('Error inserting new slots:', insertErr);
+        return { success: false, error: 'Failed to insert new slots: ' + insertErr.message };
+      }
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Unexpected error updating panelist:', error);
+    return { success: false, error: error.message || 'Unknown error' };
+  }
+}
+
+/**
  * Delete a panelist and their slots
  */
 export async function deletePanelist(panelistId: string) {
