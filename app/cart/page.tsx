@@ -233,7 +233,8 @@ export default function CartPage() {
           cartItems,
           finalTotal,
           voucherId: appliedVoucher?.id,
-          selectedPayment
+          selectedPayment,
+          origin: window.location.origin,
         }),
       });
 

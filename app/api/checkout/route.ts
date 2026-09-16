@@ -24,13 +24,12 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { cartItems, finalTotal, voucherId } = body;
+    const { cartItems, finalTotal, voucherId, origin } = body;
 
     if (!cartItems || cartItems.length === 0) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
     }
 
-    // 1. Create Transaction in Supabase
     const { data: transaction, error: txError } = await supabase
       .from("transactions")
       .insert({
@@ -71,11 +70,29 @@ export async function POST(req: Request) {
       .eq("id", transaction.id);
 
     const slug = process.env.PAKASIR_SLUG || "";
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-    
     if (!slug) {
       throw new Error("PAKASIR_SLUG environment variable is not set");
     }
+
+    // Determine base URL dynamically from request payload, headers, or environment variable
+    const originFromBody = typeof origin === "string" && origin.startsWith("http") ? origin : null;
+    const originHeader = req.headers.get("origin");
+    const refererHeader = req.headers.get("referer");
+    let refererOrigin: string | null = null;
+    if (refererHeader) {
+      try {
+        refererOrigin = new URL(refererHeader).origin;
+      } catch {}
+    }
+    const hostHeader = req.headers.get("x-forwarded-host") || req.headers.get("host");
+    const protoHeader = req.headers.get("x-forwarded-proto") || "https";
+    const hostOrigin = hostHeader ? `${protoHeader}://${hostHeader}` : null;
+
+    let baseUrl = originFromBody || originHeader || refererOrigin || hostOrigin || process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    // Strip trailing slashes
+    baseUrl = baseUrl.replace(/\/+$/, "");
+    // Fix typo domain if set in environment
+    baseUrl = baseUrl.replace("180dc-ub.com", "www.180dcub.com");
 
     // Format: https://app.pakasir.com/pay/{slug}/{amount}?order_id={order_id}&qris_only=1&redirect={redirect_url}
     const checkoutUrl = `https://app.pakasir.com/pay/${slug}/${finalTotal}?order_id=${orderId}&qris_only=1&redirect=${encodeURIComponent(baseUrl + '/success')}`;
