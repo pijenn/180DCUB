@@ -21,7 +21,8 @@ import { toast } from 'react-hot-toast';
 import {
   WRITING_TEST_DEPARTMENTS,
   DepartmentTest,
-  TrackTest
+  TrackTest,
+  ContactPerson
 } from './writingTestData';
 
 interface TestReaderModalProps {
@@ -524,8 +525,8 @@ export default function TestReaderModal({
                     </section>
 
                     {/* Contact Person Footer Card */}
-                    {currentTrack?.contactPerson && (
-                      <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between gap-4">
+                    {Boolean(currentTrack?.contactPersons?.length || currentTrack?.contactPerson) && (
+                      <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-[var(--color-primary)]/15 border border-[var(--color-primary)]/30 flex items-center justify-center text-[var(--color-primary)] shrink-0">
                             <Phone className="w-4 h-4" />
@@ -535,19 +536,37 @@ export default function TestReaderModal({
                               Questions or Difficulties?
                             </div>
                             <div className="text-sm font-bold text-white">
-                              Contact: {currentTrack.contactPerson.name} ({currentTrack.contactPerson.phone})
+                              {currentTrack?.contactPersons && currentTrack.contactPersons.length > 0 ? (
+                                <span>
+                                  Contact: {currentTrack.contactPersons.map((cp: ContactPerson) => `${cp.name} (${cp.phone})`).join(' / ')}
+                                </span>
+                              ) : (
+                                <span>
+                                  Contact: {currentTrack?.contactPerson?.name} ({currentTrack?.contactPerson?.phone})
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
 
-                        <a
-                          href={`https://wa.me/${currentTrack.contactPerson.phone.replace(/^0/, '62')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-4 py-2 rounded-xl bg-white/10 hover:bg-emerald-500 hover:text-black font-semibold text-xs text-white transition-all shrink-0"
-                        >
-                          WhatsApp
-                        </a>
+                        <div className="flex flex-wrap items-center gap-2 shrink-0">
+                          {(currentTrack?.contactPersons && currentTrack.contactPersons.length > 0
+                            ? currentTrack.contactPersons
+                            : currentTrack?.contactPerson
+                            ? [currentTrack.contactPerson]
+                            : []
+                          ).map((cp: ContactPerson, idx: number) => (
+                            <a
+                              key={idx}
+                              href={`https://wa.me/${cp.phone.replace(/[^0-9]/g, '').replace(/^0/, '62')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-emerald-500 hover:text-black font-semibold text-xs text-white transition-all shrink-0 inline-flex items-center gap-1.5"
+                            >
+                              <span>WhatsApp ({cp.name})</span>
+                            </a>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </>

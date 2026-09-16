@@ -1,3 +1,8 @@
+export interface ContactPerson {
+  name: string;
+  phone: string;
+}
+
 export interface TrackTest {
   id: string;
   name: string;
@@ -16,10 +21,8 @@ export interface TrackTest {
     }[];
     links?: { label: string; url: string; badge?: string }[];
   };
-  contactPerson?: {
-    name: string;
-    phone: string;
-  };
+  contactPerson?: ContactPerson;
+  contactPersons?: ContactPerson[];
 }
 
 export interface DepartmentTest {
@@ -37,27 +40,88 @@ export const WRITING_TEST_DEPARTMENTS: DepartmentTest[] = [
     name: 'Human Resources',
     shortName: 'HR',
     logo: '/logodept/hr.png',
-    isComingSoon: true,
     tracks: [
       {
         id: 'hr-general',
         name: 'Human Resources',
-        isComingSoon: true,
         testDescription: [
-          'Coming Soon',
-          'The writing test prompt for Human Resources is currently being prepared and will be published shortly. Please check back soon or follow official announcements.'
+          'Human Resources - People Strategy Study Case',
+          'This writing test is designed to help us understand how you perceive, analyze, and respond to people related challenges within an organization. Through realistic organizational scenarios, we aim to learn more about your understanding of people management, problem solving ability, critical thinking, and the way you approach different situations.',
+          'As a member of 180 Degrees Consulting Business UB you will work with people from different backgrounds, perspectives, and working styles. We believe that understanding team dynamics, recognizing people related challenges, and responding thoughtfully to organizational situations are important aspects of working within a team and contributing to a healthy organizational environment.',
+          'Through this assessment, we aim to understand:',
+          '• Your understanding of fundamental people management and organizational concepts.',
+          '• Your ability to identify underlying issues in people related situations.',
+          '• Your ability to analyze the potential impact of individual behavior on team performance and organizational culture.',
+          '• Your ability to develop practical and thoughtful responses to organizational challenges.',
+          '• Your ability to consider different perspectives and explain your reasoning.',
+          '• Your awareness of organizational values, fairness, and the importance of a healthy working environment.',
+          'There is no single “perfect” answer to this test. We are not looking for candidates who can simply provide textbook definitions or ideal solutions. What matters is how you understand the situation, analyze the underlying issues, and develop responses that are relevant to the given context.',
+          'Please answer each question honestly and thoughtfully. Your responses should reflect your own understanding, perspective, and approach to the situations presented.',
+          'Remember, we value the way you think, not just the answer you arrive at.'
         ],
         testMechanism: {
           points: [
-            'Coming Soon',
-            'Test mechanism instructions and submission details will be available soon.'
+            '1. Access and Make a Copy of the Writing Test Document:',
+            '• You will receive a Google Docs document containing the case scenario and questions.',
+            '• Open the provided Google Docs link, make a copy of the document by selecting File → Make a copy.',
+            '• Rename the copied document using the format: Become180_HR_[Full Name]',
+            '• Complete the writing test directly in your copied document. Please ensure that you have access to your own copy before starting the test.',
+            '2. Complete Your Candidate Information:',
+            '• At the beginning of your copied document, please provide: Full Name, Major / Study Program, Batch / Year of Entry.',
+            '3. Read and Analyze the Case Carefully:',
+            '• Read the case scenario and all questions before responding. Take the time to understand the context, identify the underlying issues, and consider the potential impact on the individuals, team, and organization.',
+            '4. Answer the Questions:',
+            '• Write your responses directly in the copied document (directly below each question or in a separate, clearly organized section).',
+            '• Please ensure that each answer is clearly labeled and corresponds to the relevant question.',
+            '• There is no word limit for this writing test. However, we encourage you to focus on the quality, clarity, relevance, and depth of your responses rather than the length of your answers.',
+            '5. Present Your Ideas in a Clear and Structured Way:',
+            '• Your responses do not have to be limited to conventional paragraphs.',
+            '• You are welcome to use different formats to communicate your ideas, such as: Structured paragraphs, Bullet points, Tables, Frameworks or thinking structures, Flowcharts or diagrams, Other visual representations that help explain your reasoning.',
+            '• The use of visual or structured formats does not replace the need to explain your reasoning.',
+            '6. Submit Your Completed Writing Test:',
+            '• Submit your completed writing test through the submission method provided by the Human Resources team.',
+            '• Please ensure: Your document is properly named, your candidate information is complete, all questions have been answered, your document is accessible to the Human Resources team, and your submission is made before the communicated deadline.',
+            'Important Rules - AI Usage:',
+            '• The use of Artificial Intelligence (AI) tools, including ChatGPT, Gemini, Copilot, or similar platforms are permitted as a supporting tool for discussion, brainstorming, or exploring ideas.',
+            '• Candidates are expected to ensure that their final responses genuinely reflect their own understanding, reasoning, and perspective.',
+            '• Strictly prohibited: Copying AI generated answers directly into the writing test (including tables, frameworks or charts, etc.); Submitting responses generated by AI without understanding or critically reviewing the content; Using AI to replace your own analysis, reasoning, and decision making; Presenting AI generated responses as your own original thinking.',
+            '• Candidates may be asked to explain or elaborate on their responses during the recruitment process. Any submission found to contain AI generated responses that do not genuinely reflect the candidate\'s own understanding may be subject to further evaluation or disqualification.',
+            'Additional Guidelines:',
+            '• Answers may be written in either English or mixed with Bahasa Indonesia.',
+            '• Please ensure that your responses are clear and easy to understand.',
+            '• There is no required word count for each answer. Please manage your time effectively and ensure that all questions are answered.',
+            '• If you have any questions or encounter difficulties regarding the test, please contact the Human Resources team through the designated contact person.'
+          ],
+          links: [
+            {
+              label: 'HR People Strategy Case Study (Google Docs)',
+              url: 'https://docs.google.com/document/d/1LiLQlNMDrxfjG4CoY_nUaBnBjriNaD0iD5xi-j9YBAY/edit?usp=sharing',
+              badge: 'Google Docs'
+            }
           ]
         },
         writingTestDetail: {
           points: [
-            'Coming Soon',
-            'Assessment criteria and prompt details will be available soon.'
+            'This writing test consists of one organizational case study followed by three questions. The case presents people related challenges that may involve member behavior, team dynamics, communication, performance, leadership, or organizational culture.',
+            'Candidates are expected to:',
+            '• Identify the main and underlying issues in the case',
+            '• Analyze the situation from relevant individual and organizational perspectives',
+            '• Explain the possible impact of the issue on team performance or organizational culture',
+            '• Provide practical, relevant, and well reasoned responses',
+            'Answers may be presented in the form of paragraphs, bullet points, tables, frameworks, flowcharts, or other structured formats, as long as they clearly communicate the candidate’s analysis and reasoning.',
+            'There is no single correct answer. Candidates are encouraged to provide responses based on their own understanding, perspective, and judgment.'
+          ],
+          links: [
+            {
+              label: 'Access Case Study Document',
+              url: 'https://docs.google.com/document/d/1LiLQlNMDrxfjG4CoY_nUaBnBjriNaD0iD5xi-j9YBAY/edit?usp=sharing',
+              badge: 'Case Study'
+            }
           ]
+        },
+        contactPerson: {
+          name: 'Dashi',
+          phone: '0895323083041'
         }
       }
     ]
@@ -521,28 +585,78 @@ export const WRITING_TEST_DEPARTMENTS: DepartmentTest[] = [
     name: 'Consulting',
     shortName: 'Consulting',
     logo: '/logodept/cons.png',
-    isComingSoon: true,
     tracks: [
       {
         id: 'consulting-general',
         name: 'Consulting',
-        isComingSoon: true,
         testDescription: [
-          'Coming Soon',
-          'The writing test prompt for Consulting is currently being finalized and will be published soon. Please check back later or monitor official notifications.'
+          'Applicants will be given one mini business case and required to answer the questions, analyze the problem, and propose practical, case specific recommendations in a presentation deck.',
+          'This assessment evaluates your structured problem-solving, analytical depth, strategic recommendation development, and business communication.'
         ],
         testMechanism: {
           points: [
-            'Coming Soon',
-            'Case brief guidelines, deck structure, and submission instructions will be announced soon.'
+            'Candidates will receive 1 mini business case.',
+            'Prepare a maximum of 10 main slide presentation deck in PDF format.',
+            'Cover, References, and Appendix are excluded from the 10-slide limit.',
+            'Duration : 16 Sept - 24 Sept 22.00 WIB.',
+            'Submit the deck before the stated deadline.',
+            'Only the submitted deck will be evaluated.',
+            'Candidates may conduct independent research, but all external sources must be properly cited.',
+            'AI & Originality Policy:',
+            '• Candidates are strictly prohibited from using AI for any part of the test.',
+            '• The entire deck must be 100% original and independently created by the candidate, No AI!!!',
+            '• Copying, sharing, or using another candidate\'s work is prohibited.',
+            '• If AI use is detected, 50 points will be deducted. Serious violations may result in disqualification.'
+          ],
+          links: [
+            {
+              label: 'Consulting Mini Case Document (Google Drive)',
+              url: 'https://drive.google.com/file/d/1dOk0JzuWxn3dDDOzbBj46Q76VuSUaefB/view',
+              badge: 'Google Drive'
+            }
           ]
         },
         writingTestDetail: {
           points: [
-            'Coming Soon',
-            'Consulting business problem prompts and deliverables will be updated soon.'
+            'Mini case and question can be accessed through the provided link.',
+            'Complete the case in a presentation deck with a maximum of 10 slides.',
+            'Example Structure (can be adjusted depending on your creativity):',
+            '• Cover : Name, case title',
+            '• 1 slide Executive Summary',
+            '• 1 slide Problem Analysis',
+            '• 2–3 slides Deep Analysis',
+            '• 3 slides Recommendation',
+            '• 1 slide Timeline',
+            '• 1 slide Risk & Mitigation',
+            '• 1 slide Financial Projection : Include if relevant. If not, it is acceptable to skip, but ensure your analysis and recommendation are strong and well-developed',
+            '• References : Cite all sources using APA format (excluded from 10-slide limit)',
+            '• Appendix (No Limit) : Include supporting data, additional analysis, or backup materials',
+            'Total: 10 slides (excluding cover, references, appendix).',
+            'Aspect Ratio: 1920 × 1080 px (Landscape).',
+            'File Format & Naming Convention: Consulting_WritingTest_[FullName].pdf'
+          ],
+          links: [
+            {
+              label: 'Access Consulting Mini Case',
+              url: 'https://drive.google.com/file/d/1dOk0JzuWxn3dDDOzbBj46Q76VuSUaefB/view',
+              badge: 'Case Study'
+            }
           ]
-        }
+        },
+        contactPerson: {
+          name: 'Nazwa',
+          phone: '08816828356'
+        },
+        contactPersons: [
+          {
+            name: 'Nazwa',
+            phone: '08816828356'
+          },
+          {
+            name: 'Fathi',
+            phone: '085945050909'
+          }
+        ]
       }
     ]
   },
