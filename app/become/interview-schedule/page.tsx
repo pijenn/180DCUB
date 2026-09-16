@@ -119,7 +119,10 @@ function InterviewScheduleContent() {
   // STEP 1: Verify Candidate
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nim || !email) return;
+    if (!email.trim()) {
+      setVerificationError("Please enter your registered email address.");
+      return;
+    }
 
     setVerifying(true);
     setVerificationError("");
@@ -128,6 +131,9 @@ function InterviewScheduleContent() {
       const res = await verifyCandidateEligibility(nim, email);
       if (res.success && res.candidate) {
         setCandidateName(res.candidate.name);
+        if (res.candidate.nim) {
+          setNim(res.candidate.nim);
+        }
 
         if (res.existingBooking) {
           // Candidate already has an active booking! Jump directly to Confirmed Ticket screen
@@ -250,7 +256,7 @@ function InterviewScheduleContent() {
     if (!existingBooking) return;
     setCancellingInProgress(true);
     try {
-      const res = await cancelCandidateBooking(existingBooking.id, nim);
+      const res = await cancelCandidateBooking(existingBooking.id, nim, email);
       if (res.success) {
         toast.success("Your interview appointment has been cancelled. You may now pick a new schedule.");
         setExistingBooking(null);
@@ -361,14 +367,13 @@ function InterviewScheduleContent() {
             <form onSubmit={handleVerify} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-white/70 uppercase tracking-wider mb-1.5">
-                  Student ID Number (NIM)
+                  Student ID Number (NIM) <span className="text-white/40 font-normal lowercase">(optional)</span>
                 </label>
                 <input
                   type="text"
-                  required
                   value={nim}
                   onChange={(e) => setNim(e.target.value)}
-                  placeholder="e.g. 215150200111001"
+                  placeholder="e.g. 215150200111001 (optional)"
                   className="w-full bg-black/40 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] font-mono text-sm transition-all"
                 />
               </div>
@@ -429,7 +434,7 @@ function InterviewScheduleContent() {
             <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
               <div>
                 <p className="text-xs text-white/50 uppercase tracking-wider font-semibold">
-                  Candidate: <span className="text-white font-bold">{candidateName}</span> ({nim})
+                  Candidate: <span className="text-white font-bold">{candidateName}</span>{nim ? ` (${nim})` : ""}
                 </p>
                 <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-0.5">
                   Select Your Department & Division
@@ -861,9 +866,11 @@ function InterviewScheduleContent() {
                     {existingBooking.booked_by_name || candidateName}
                   </p>
                 </div>
-                <div className="text-right font-mono text-xs text-[var(--color-primary)] font-bold">
-                  NIM: {existingBooking.booked_by_nim || nim}
-                </div>
+                {(existingBooking.booked_by_nim || nim) ? (
+                  <div className="text-right font-mono text-xs text-[var(--color-primary)] font-bold">
+                    NIM: {existingBooking.booked_by_nim || nim}
+                  </div>
+                ) : null}
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-xs">

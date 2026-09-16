@@ -14,18 +14,17 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
  */
 export async function verifyCandidateEligibility(nim: string, email: string) {
   try {
-    const cleanNim = nim.trim();
-    const cleanEmail = email.trim();
+    const cleanNim = (nim || '').trim();
+    const cleanEmail = (email || '').trim();
 
-    if (!cleanNim || !cleanEmail) {
-      return { success: false, error: 'Please enter both your NIM and Email' };
+    if (!cleanEmail) {
+      return { success: false, error: 'Please enter your registered email' };
     }
 
-    // 1. Check become_applicants table
+    // 1. Check become_applicants table by email only
     const { data: applicant, error: applicantError } = await supabaseAdmin
       .from('become_applicants')
       .select('name, nim, email, status_1')
-      .eq('nim', cleanNim)
       .ilike('email', cleanEmail)
       .maybeSingle();
 
@@ -37,7 +36,7 @@ export async function verifyCandidateEligibility(nim: string, email: string) {
     if (!applicant) {
       return {
         success: false,
-        error: 'No applicant record found for this NIM and Email combination.',
+        error: 'No applicant record found for this Email address. Please check your registered email.',
       };
     }
 
@@ -48,8 +47,8 @@ export async function verifyCandidateEligibility(nim: string, email: string) {
       };
     }
 
-    // 2. Check if candidate already has an existing booked slot
-    const { data: existingBooking, error: bookingError } = await supabaseAdmin
+    // 2. Check if candidate already has an existing booked slot (by email or NIM)
+    let bookingQuery = supabaseAdmin
       .from('interview_slots')
       .select(`
         id,
@@ -69,15 +68,21 @@ export async function verifyCandidateEligibility(nim: string, email: string) {
           phone_number
         )
       `)
-      .eq('booked_by_nim', cleanNim)
-      .eq('is_booked', true)
-      .maybeSingle();
+      .eq('is_booked', true);
+
+    if (cleanNim) {
+      bookingQuery = bookingQuery.or(`booked_by_email.ilike."${cleanEmail}",booked_by_nim.eq."${cleanNim}"`);
+    } else {
+      bookingQuery = bookingQuery.ilike('booked_by_email', cleanEmail);
+    }
+
+    const { data: existingBooking, error: bookingError } = await bookingQuery.maybeSingle();
 
     return {
       success: true,
       candidate: {
         name: applicant.name,
-        nim: applicant.nim,
+        nim: applicant.nim || cleanNim || '',
         email: applicant.email,
       },
       existingBooking: existingBooking || null,
@@ -165,15 +170,22 @@ export async function bookInterviewSlot(payload: {
 }) {
   try {
     const { slotId, nim, email, name } = payload;
-    const cleanNim = nim.trim();
+    const cleanNim = (nim || '').trim();
+    const cleanEmail = (email || '').trim();
 
     // 1. Verify candidate doesn't already have an active booking
-    const { data: currentBooking } = await supabaseAdmin
+    let currentBookingQuery = supabaseAdmin
       .from('interview_slots')
       .select('id')
-      .eq('booked_by_nim', cleanNim)
-      .eq('is_booked', true)
-      .maybeSingle();
+      .eq('is_booked', true);
+
+    if (cleanNim) {
+      currentBookingQuery = currentBookingQuery.or(`booked_by_email.ilike."${cleanEmail}",booked_by_nim.eq."${cleanNim}"`);
+    } else {
+      currentBookingQuery = currentBookingQuery.ilike('booked_by_email', cleanEmail);
+    }
+
+    const { data: currentBooking } = await currentBookingQuery.maybeSingle();
 
     if (currentBooking) {
       return {
@@ -218,9 +230,9 @@ export async function bookInterviewSlot(payload: {
       .from('interview_slots')
       .update({
         is_booked: true,
-        booked_by_nim: cleanNim,
+        booked_by_nim: cleanNim || null,
         booked_by_name: name.trim(),
-        booked_by_email: email.trim(),
+        booked_by_email: cleanEmail,
         booked_at: new Date().toISOString(),
       })
       .eq('id', slotId)
@@ -265,11 +277,12 @@ export async function bookInterviewSlot(payload: {
 /**
  * Candidate cancels their own booking to pick a new slot
  */
-export async function cancelCandidateBooking(slotId: string, nim: string) {
+export async function cancelCandidateBooking(slotId: string, nim?: string, email?: string) {
   try {
-    const cleanNim = nim.trim();
+    const cleanNim = (nim || '').trim();
+    const cleanEmail = (email || '').trim();
 
-    const { error } = await supabaseAdmin
+    let cancelQuery = supabaseAdmin
       .from('interview_slots')
       .update({
         is_booked: false,
@@ -278,8 +291,17 @@ export async function cancelCandidateBooking(slotId: string, nim: string) {
         booked_by_email: null,
         booked_at: null,
       })
-      .eq('id', slotId)
-      .eq('booked_by_nim', cleanNim);
+      .eq('id', slotId);
+
+    if (cleanEmail && cleanNim) {
+      cancelQuery = cancelQuery.or(`booked_by_email.ilike."${cleanEmail}",booked_by_nim.eq."${cleanNim}"`);
+    } else if (cleanEmail) {
+      cancelQuery = cancelQuery.ilike('booked_by_email', cleanEmail);
+    } else if (cleanNim) {
+      cancelQuery = cancelQuery.eq('booked_by_nim', cleanNim);
+    }
+
+    const { error } = await cancelQuery;
 
     if (error) {
       console.error('Error cancelling candidate booking:', error);

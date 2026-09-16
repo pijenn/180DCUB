@@ -10,6 +10,9 @@ export interface Product {
   category: string;
   file_url?: string;
   owner?: string;
+  display_order?: number;
+  is_best_seller?: boolean;
+  created_at?: string;
 }
 
 export interface MentoringSchedule {
@@ -31,6 +34,8 @@ export const mockProducts: Product[] = [
     image_url: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=2070&auto=format&fit=crop',
     category: 'Competition',
     owner: 'John Doe',
+    display_order: 1,
+    is_best_seller: true,
   },
   {
     id: '2',
@@ -41,6 +46,8 @@ export const mockProducts: Product[] = [
     image_url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
     category: 'Career',
     owner: 'Jane Smith',
+    display_order: 2,
+    is_best_seller: true,
   },
   {
     id: '3',
@@ -50,6 +57,8 @@ export const mockProducts: Product[] = [
     price: 100000,
     image_url: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2070&auto=format&fit=crop',
     category: 'BCC',
+    display_order: 3,
+    is_best_seller: true,
   },
   {
     id: '4',

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Product } from "@/lib/mockData";
-import { ArrowRight, FileText, MonitorPlay, Users } from "lucide-react";
+import { ArrowRight, FileText, MonitorPlay, Users, Sparkles } from "lucide-react";
 
 interface ProductCardProps {
   product: Product;
@@ -56,8 +56,14 @@ export default function ProductCard({ product }: ProductCardProps) {
         )}
         
         {/* Overlay Hover State removed for true color */}
-        {/* Category Badge */}
-        <div className="absolute top-6 left-6 flex gap-3">
+        {/* Category & Best Seller Badges */}
+        <div className="absolute top-6 left-6 flex flex-wrap items-center gap-2.5 z-10">
+          {product.is_best_seller && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-black tracking-wider uppercase rounded-none bg-[var(--color-primary)] text-black shadow-[0_0_20px_rgba(140,198,63,0.5)] border border-black/10">
+              <Sparkles className="w-3.5 h-3.5 fill-black" />
+              Best Seller!
+            </span>
+          )}
           <span className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold tracking-widest uppercase rounded-none bg-black/80 backdrop-blur-md text-white border border-white/10">
             {getIcon()}
             {getTypeLabel()}

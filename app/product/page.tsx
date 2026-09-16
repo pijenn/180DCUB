@@ -39,26 +39,58 @@ export default function ProductCatalog() {
     { label: "Mentoring", value: "MENTORING" },
   ];
 
+  const sortProducts = (list: Product[]): Product[] => {
+    return [...list].sort((a, b) => {
+      // 1. Highlighted Best Seller products appear first in user POV
+      const aBest = Boolean(a.is_best_seller);
+      const bBest = Boolean(b.is_best_seller);
+      if (aBest !== bBest) {
+        return aBest ? -1 : 1;
+      }
+
+      // 2. Custom placement arrangement (display_order)
+      const orderA = a.display_order ?? 9999;
+      const orderB = b.display_order ?? 9999;
+      if (orderA !== orderB) {
+        return orderA - orderB;
+      }
+
+      // 3. Newest products first
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return dateB - dateA;
+    });
+  };
+
   useEffect(() => {
     async function fetchProducts() {
       setLoading(true);
       try {
-        // Try fetching from Supabase
-        const { data, error } = await supabase.from('products').select('*');
+        // Try fetching with placement order from Supabase
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('display_order', { ascending: true })
+          .order('created_at', { ascending: false });
         
         if (error) {
-          console.error('Supabase error:', error.message);
-          // Fallback to mock data
-          setProducts(mockProducts);
+          // Fallback query if display_order column doesn't exist yet
+          console.warn('Initial products query failed, attempting standard query:', error.message);
+          const fallbackRes = await supabase.from('products').select('*');
+          if (fallbackRes.data && fallbackRes.data.length > 0) {
+            setProducts(sortProducts(fallbackRes.data as Product[]));
+          } else {
+            setProducts(sortProducts(mockProducts));
+          }
         } else if (data && data.length > 0) {
-          setProducts(data as Product[]);
+          setProducts(sortProducts(data as Product[]));
         } else {
           // If table is empty, use mock data for UI demo purposes
-          setProducts(mockProducts);
+          setProducts(sortProducts(mockProducts));
         }
       } catch (err) {
         console.error('Fetch error:', err);
-        setProducts(mockProducts);
+        setProducts(sortProducts(mockProducts));
       } finally {
         setLoading(false);
       }
