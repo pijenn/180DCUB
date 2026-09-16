@@ -95,7 +95,8 @@ export async function POST(req: Request) {
     baseUrl = baseUrl.replace("180dc-ub.com", "www.180dcub.com");
 
     // Format: https://app.pakasir.com/pay/{slug}/{amount}?order_id={order_id}&qris_only=1&redirect={redirect_url}
-    const checkoutUrl = `https://app.pakasir.com/pay/${slug}/${finalTotal}?order_id=${orderId}&qris_only=1&redirect=${encodeURIComponent(baseUrl + '/success')}`;
+    const redirectUrl = `${baseUrl}/success?order_id=${encodeURIComponent(orderId)}`;
+    const checkoutUrl = `https://app.pakasir.com/pay/${slug}/${finalTotal}?order_id=${orderId}&qris_only=1&redirect=${encodeURIComponent(redirectUrl)}`;
 
     return NextResponse.json({ 
       checkout_url: checkoutUrl,

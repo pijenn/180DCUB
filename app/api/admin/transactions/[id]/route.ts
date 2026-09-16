@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { sendTransactionSuccessEmails } from "@/lib/email";
+import {
+  markTransactionSuccess,
+  verifyAndFulfillPakasirOrder,
+} from "@/lib/transaction-service";
 
 export async function PATCH(
   req: Request,
@@ -12,17 +15,17 @@ export async function PATCH(
 
     // 1. Verify Authentication & Role
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (!session) {
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { data: userData } = await supabase
       .from("users")
       .select("role")
-      .eq("id", session.user.id)
+      .eq("id", user.id)
       .single();
 
     if (userData?.role !== "ADMIN") {
@@ -30,28 +33,39 @@ export async function PATCH(
     }
 
     const body = await req.json();
-    const { status } = body;
+    const { status, action } = body;
+
+    // Handle "sync" with Pakasir action
+    if (action === "sync") {
+      const syncResult = await verifyAndFulfillPakasirOrder(id);
+      return NextResponse.json({
+        success: syncResult.success,
+        status: syncResult.status,
+        pakasirStatus: syncResult.pakasirStatus,
+        error: syncResult.error,
+        message:
+          syncResult.status === "SUCCESS"
+            ? "Payment verified on Pakasir and marked as SUCCESS"
+            : `Pakasir status: ${syncResult.pakasirStatus || syncResult.status}`,
+      });
+    }
 
     if (!status) {
-      return NextResponse.json({ error: "Status is required" }, { status: 400 });
+      return NextResponse.json({ error: "Status or action is required" }, { status: 400 });
     }
 
-    // 2. Get current transaction state
-    const { data: currentTx, error: fetchError } = await supabase
-      .from("transactions")
-      .select("status, voucher_id")
-      .eq("id", id)
-      .single();
-
-    if (fetchError || !currentTx) {
-      return NextResponse.json({ error: "Transaction not found" }, { status: 404 });
+    if (status === "SUCCESS") {
+      const result = await markTransactionSuccess(id);
+      if (!result.success) {
+        return NextResponse.json({ error: result.error }, { status: 400 });
+      }
+      return NextResponse.json({
+        success: true,
+        message: "Transaction marked as SUCCESS and fulfilled",
+      });
     }
 
-    if (currentTx.status === status) {
-      return NextResponse.json({ message: "Status is already " + status });
-    }
-
-    // 3. Update Status
+    // For statuses other than SUCCESS (e.g. FAILED, EXPIRED, PENDING)
     const { error: updateError } = await supabase
       .from("transactions")
       .update({ status })
@@ -61,31 +75,15 @@ export async function PATCH(
       throw new Error(updateError.message);
     }
 
-    // 4. Handle Post-Update Logic if new status is SUCCESS
-    if (status === "SUCCESS") {
-      // Decrease voucher quota if applicable
-      if (currentTx.voucher_id) {
-        const { data: voucher } = await supabase
-          .from("voucher_code")
-          .select("kuota")
-          .eq("id", currentTx.voucher_id)
-          .single();
-
-        if (voucher && voucher.kuota > 0) {
-          await supabase
-            .from("voucher_code")
-            .update({ kuota: voucher.kuota - 1 })
-            .eq("id", currentTx.voucher_id);
-        }
-      }
-
-      // Send the fulfillment emails
-      await sendTransactionSuccessEmails(id);
-    }
-
-    return NextResponse.json({ success: true, message: "Transaction updated successfully" });
+    return NextResponse.json({
+      success: true,
+      message: `Transaction updated to ${status}`,
+    });
   } catch (error: any) {
     console.error("Error updating transaction:", error);
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Eye, Phone } from "lucide-react";
+import { SyncPendingButton } from "./SyncPendingButton";
 
 export const dynamic = "force-dynamic";
 
@@ -43,11 +44,14 @@ export default async function AdminTransactionsPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage all customer transactions and their payment status.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
+          <p className="text-muted-foreground mt-2">
+            Manage all customer transactions and their payment status.
+          </p>
+        </div>
+        <SyncPendingButton />
       </div>
 
       <div className="bg-card rounded-xl border border-border overflow-hidden">
