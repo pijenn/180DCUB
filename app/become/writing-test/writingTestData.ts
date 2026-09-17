@@ -509,7 +509,7 @@ export const WRITING_TEST_DEPARTMENTS: DepartmentTest[] = [
           links: [
             {
               label: 'Legal & Finance Case Study Document',
-              url: 'https://docs.google.com/document/d/1HssvWlyL5t8vF-TAw4HwNW-lKuHq3h9tQOETJaqM9Iw/edit?tab=t.0',
+              url: 'https://docs.google.com/document/d/1k00X01qz2OhtkhQX65loD_VMvN5yXAxASKf9uI697U0/edit?usp=sharing',
               badge: 'Google Docs Case Study'
             }
           ]
