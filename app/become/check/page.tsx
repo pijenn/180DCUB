@@ -11,6 +11,7 @@ import confetti from 'canvas-confetti';
 import { Sparkles, PartyPopper, ExternalLink, RotateCcw, CheckCircle2, CalendarCheck, ArrowRight } from 'lucide-react';
 
 const BATCH_1_WA_GROUP_URL = 'https://chat.whatsapp.com/JZvgqn5OhXD86kxThdoFvK?mode=gi_t';
+const BATCH_2_WA_GROUP_URL = 'https://chat.whatsapp.com/CLf8Ol9ouVSJi7jpTFFNkw?mode=gi_t';
 
 const triggerJoyfulCelebration = () => {
   if (typeof window === 'undefined') return;
@@ -97,7 +98,7 @@ function CheckerContent() {
   const batchParam = searchParams.get('batch');
   const batch = batchParam === '2' ? 2 : 1;
 
-  const targetDateStr = batch === 2 ? "2026-09-26T15:00:00+07:00" : "2026-06-16T15:00:00+07:00";
+  const targetDateStr = batch === 2 ? "2026-09-26T09:00:00+07:00" : "2026-06-16T15:00:00+07:00";
   const targetDate = useMemo(() => new Date(targetDateStr).getTime(), [targetDateStr]);
 
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -152,7 +153,6 @@ function CheckerContent() {
         setApplicantNim(res.status.nim || '');
         if (isPassed) {
           setResult('success');
-          // Trigger joyful celebration animation & confetti immediately!
           setTimeout(() => {
             triggerJoyfulCelebration();
           }, 150);
@@ -226,7 +226,6 @@ function CheckerContent() {
             transition={{ duration: 0.8 }}
             className={`w-full ${result === 'success' ? 'max-w-lg' : 'max-w-md'} bg-white/5 backdrop-blur-md border ${result === 'success' ? 'border-[var(--color-primary)]/40 shadow-[0_0_50px_rgba(140,198,63,0.2)]' : 'border-white/10 shadow-2xl'} p-6 sm:p-8 rounded-3xl relative overflow-hidden transition-all duration-500`}
           >
-            {/* Ambient glow top */}
             <div 
               className={`absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-2 ${result === 'success' ? 'bg-[var(--color-primary)] opacity-80 blur-xl' : 'bg-[var(--color-primary)] opacity-20 blur-2xl'} transition-all`} 
             />
@@ -302,12 +301,12 @@ function CheckerContent() {
                 </div>
 
                 <h3 className="text-3xl sm:text-4xl font-extrabold text-white mb-2 tracking-tight">
-                  Congratulations!
+                  Welcome to 180dcub!
                 </h3>
 
                 {applicantName ? (
                   <p className="text-lg font-medium text-white/90 mb-3">
-                    Congratulations, <span className="text-[var(--color-primary)] font-bold">{applicantName}</span>! 🎉
+                    Hello Junior Analyst, <span className="text-[var(--color-primary)] font-bold">{applicantName}</span>! 🎉
                   </p>
                 ) : (
                   <p className="text-lg font-medium text-white/90 mb-3">
@@ -316,11 +315,11 @@ function CheckerContent() {
                 )}
 
                 <p className="text-white/70 mb-6 leading-relaxed text-sm max-w-md mx-auto">
-                  You have successfully passed the <span className="text-white font-semibold">Batch {batch} selection process</span> for <span className="text-white font-semibold">Become 180</span>! We are thrilled to welcome your talent and passion to 180 Degrees Consulting Universitas Brawijaya.
+                  You have successfully passed the <span className="text-white font-semibold">Batch {batch} selection process</span> for <span className="text-white font-semibold">Become 180!</span> We are thrilled to welcome your talent and passion to 180 Degrees Consulting Universitas Brawijaya.
                 </p>
 
                 {/* WhatsApp Group Call-to-Action */}
-                {batch === 1 && (
+                {batch === 2 && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -333,10 +332,10 @@ function CheckerContent() {
                         <span>Next Step Required</span>
                       </div>
                       <p className="text-xs text-white/70 mb-3 leading-relaxed">
-                        Please join the official WhatsApp group for Batch 1 successful candidates as soon as possible to receive the briefing, and other important information.
+                        Please join the official WhatsApp group for Batch 2 successful candidates as soon as possible to receive the briefing, and other important information.
                       </p>
                       <motion.a
-                        href={BATCH_1_WA_GROUP_URL}
+                        href={BATCH_2_WA_GROUP_URL}
                         target="_blank"
                         rel="noopener noreferrer"
                         whileHover={{ scale: 1.02, boxShadow: "0 0 25px rgba(37, 211, 102, 0.45)" }}
@@ -349,34 +348,13 @@ function CheckerContent() {
                           </div>
                           <div>
                             <div className="text-[11px] font-medium text-white/85 uppercase tracking-wider leading-none mb-1">Official Community</div>
-                            <div className="text-sm sm:text-base font-extrabold text-white leading-tight">Join Batch 1 WhatsApp Group</div>
+                            <div className="text-sm sm:text-base font-extrabold text-white leading-tight">Join Junior Analyst WhatsApp Group</div>
                           </div>
                         </div>
                         <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform shrink-0">
                           <ExternalLink className="w-4 h-4" />
                         </div>
                       </motion.a>
-
-                      {/* Interview Schedule Call-to-Action */}
-                      <div className="mt-3 pt-3 border-t border-white/10">
-                        <Link
-                          href={`/become/interview-schedule?nim=${encodeURIComponent(applicantNim || '')}&email=${encodeURIComponent(email)}`}
-                          className="w-full flex items-center justify-between gap-3 bg-[var(--color-primary)] text-black font-extrabold p-3.5 sm:p-4 rounded-xl shadow-lg hover:bg-white transition-all group cursor-pointer"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-black/15 flex items-center justify-center text-black shrink-0 group-hover:scale-105 transition-transform">
-                              <CalendarCheck className="w-6 h-6" />
-                            </div>
-                            <div>
-                              <div className="text-[11px] font-bold text-black/70 uppercase tracking-wider leading-none mb-1">Mandatory Next Step</div>
-                              <div className="text-sm sm:text-base font-extrabold text-black leading-tight">Book Interview Schedule</div>
-                            </div>
-                          </div>
-                          <div className="w-8 h-8 rounded-full bg-black/10 flex items-center justify-center text-black group-hover:translate-x-1 transition-transform shrink-0">
-                            <ArrowRight className="w-4 h-4" />
-                          </div>
-                        </Link>
-                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -410,7 +388,7 @@ function CheckerContent() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">Thank you for participating and Don’t let this stop you! !</h3>
+                <h3 className="text-xl font-bold text-white mb-2">Thank you for participating and Don’t let this stop you!</h3>
                 <p className="text-white/60 mb-8 text-sm leading-relaxed">
                   We truly appreciate all the effort you’ve put into this process. Keep growing and we hope to see you again at another 180 event!
                 </p>

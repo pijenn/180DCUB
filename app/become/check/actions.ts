@@ -9,7 +9,6 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function checkAnnouncementStatus(emailOrNim: string, maybeEmail?: string) {
   try {
-    // If two arguments were passed (legacy nim, email), use the second arg as email
     const emailToQuery = (maybeEmail && maybeEmail.trim()) ? maybeEmail : emailOrNim;
     const cleanEmail = emailToQuery ? emailToQuery.trim() : '';
 

@@ -158,7 +158,6 @@ export default function BecomePage() {
     const startWriting = new Date(`${currentYear}-09-17T00:00:00`);
     const endWriting = new Date(`${currentYear}-09-25T00:00:00`);
 
-    // Juga cek jadwal recruitment 2026
     const startWriting2026 = new Date("2026-09-17T00:00:00");
     const endWriting2026 = new Date("2026-09-25T00:00:00");
 
@@ -202,8 +201,8 @@ export default function BecomePage() {
     isActive: index === activeIndex,
   }));
 
-  const batch_1 = true;
-  const batch_2 = false;
+  const batch_1 = false;
+  const batch_2 = true;
 
   let buttonText = 'Join Us!';
   let buttonLink = 'https://forms.monday.com/forms/b00a49c2076e52aac3358dd1fb13adc8?r=use1';
@@ -250,26 +249,14 @@ export default function BecomePage() {
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
               className="mt-12 mb-10 w-full max-w-6xl px-6 md:px-0"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
-                {/* Col 1: Countdown */}
-                <div className="flex flex-col items-center md:items-start justify-center md:border-r border-white/10 pb-8 md:pb-0 md:pr-10 border-b md:border-b-0">
-                  <span className="text-xs tracking-[0.2em] uppercase font-bold text-[var(--color-primary)] mb-6 block text-center md:text-left w-full">Batch 1 Interview & Writing Test Close In</span>
-                  <div className="grid grid-flow-col gap-2 lg:gap-3 text-center auto-cols-max">
-                    <FlipCard value={mounted ? timeLeft.days : 0} label="days" />
-                    <FlipCard value={mounted ? timeLeft.hours : 0} label="hours" />
-                    <FlipCard value={mounted ? timeLeft.minutes : 0} label="min" />
-                    <FlipCard value={mounted ? timeLeft.seconds : 0} label="sec" />
-                  </div>
-                </div>
-
-                {/* Col 2: Text & Button */}
+              <div className=" gap-10 md:gap-16 items-center">
                 <div className="flex flex-col justify-center text-center md:text-left">
                   <p className="text-lg md:text-xl lg:text-xl text-white/70 font-light leading-relaxed mb-8">
-                    <strong className="text-white font-semibold">Announcement Batch 1 is Out!</strong>
+                    <strong className="text-white font-semibold">Announcement is Out!</strong>
                     <br></br>Check your result now by inputing your NIM and Email in the button below
                   </p>
 
-                  <div className="flex justify-center md:justify-start">
+                  <div className="flex justify-center md:justify-center">
                     {buttonLink.startsWith('http') ? (
                       <a
                         href={buttonLink}
@@ -326,7 +313,6 @@ export default function BecomePage() {
               </Link>
             </div>
 
-            {/* AI Policy Notice Banner */}
             <div className="p-6 sm:p-8 rounded-3xl bg-amber-500/10 border border-amber-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               <div className="flex items-start gap-4">
                 <AlertTriangle className="w-6 h-6 text-amber-400 shrink-0 mt-0.5" />
@@ -353,7 +339,6 @@ export default function BecomePage() {
           </div>
         </section>
 
-        {/* Criteria Section - Glassmorphism layout */}
         <section className="relative w-full min-h-[90vh] flex flex-col items-center justify-center pt-24 px-6 overflow-hidden bg-background">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[var(--color-primary)]/10 blur-[150px] rounded-full pointer-events-none" />
 
